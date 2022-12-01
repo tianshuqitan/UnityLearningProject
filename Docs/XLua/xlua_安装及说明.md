@@ -1,3 +1,9 @@
+- [XLua 安装及说明](#xlua-安装及说明)
+  - [下载安装](#下载安装)
+  - [目录解析](#目录解析)
+  - [第三方 lua 库](#第三方-lua-库)
+  - [第三方库2](#第三方库2)
+
 # XLua 安装及说明
 
 ## 下载安装
@@ -34,7 +40,6 @@
             | util.lua
     | Src(C# 源代码)
 ```
-
 
 ## 第三方 lua 库
 
@@ -138,6 +143,11 @@ local s = rapidjson.encode(t)
 print('json', s)
 ```
 
+**参考链接**
+
+* [XLua 集成 rapidjson 与 protobuf](https://zhuanlan.zhihu.com/p/389424029)
+
 ## 第三方库2
 
 直接下载 [build_xlua_with_libs](https://github.com/chexiongsheng/build_xlua_with_libs)
+
