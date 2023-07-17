@@ -17,6 +17,7 @@ using LuaCSFunction = XLua.LuaDLL.lua_CSFunction;
 #endif
 
 using System;
+using UnityEngine;
 
 namespace XLua
 {
@@ -34,15 +35,17 @@ namespace XLua
 
         public LuaBase(int reference, LuaEnv luaenv)
         {
+            Debug.Log("LuaBase " + reference);
             luaReference = reference;
             luaEnv = luaenv;
         }
-
+        
         ~LuaBase()
         {
+            Debug.Log("~LuaBase " + luaReference);
             Dispose(false);
         }
-
+        
         public void Dispose()
         {
             Dispose(true);
