@@ -4,5 +4,14 @@
 EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
-  m_Scenes: []
+  m_Scenes:
+  - enabled: 1
+    path: Assets/Test/XLua/Scene_Launch.unity
+    guid: 159313f39cbf65948bd1a3f175652937
+  - enabled: 1
+    path: Assets/Test/XLua/Scene/01_CSharpCallLua/CSharpRefLua.unity
+    guid: c1bd611eded08794999514d9167d8f8e
+  - enabled: 1
+    path: Assets/Test/XLua/Scene/01_CSharpCallLua/CSharpCreateLua.unity
+    guid: df871a6acdefa7841bcc1a1e4893b43b
   m_configObjects: {}

@@ -1,0 +1,4 @@
+global = {
+    name = "global_ref",
+    value = "global_ref_value"
+}

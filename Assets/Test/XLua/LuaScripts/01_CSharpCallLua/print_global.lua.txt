@@ -1,0 +1,5 @@
+if global then
+    print("global.name is " .. global.name)
+else
+    print("global is nil")
+end

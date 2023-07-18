@@ -505,6 +505,7 @@ namespace XLua
 
             LuaAPI.lua_pushvalue(L, idx);
             int reference = LuaAPI.luaL_ref(L);
+            UnityEngine.Debug.LogFormat("luaL_ref Delegate {0}", reference);
             LuaAPI.lua_pushvalue(L, idx);
             LuaAPI.lua_pushnumber(L, reference);
             LuaAPI.lua_rawset(L, LuaIndexes.LUA_REGISTRYINDEX);
@@ -563,6 +564,7 @@ namespace XLua
 
         public void ReleaseLuaBase(RealStatePtr L, int reference, bool is_delegate)
         {
+            UnityEngine.Debug.LogFormat("luaL_unRef {0}", reference);
             if(is_delegate)
             {
                 LuaAPI.xlua_rawgeti(L, LuaIndexes.LUA_REGISTRYINDEX, reference);

@@ -20,6 +20,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System;
 using System.Reflection;
+using UnityEngine;
 
 namespace XLua
 {
@@ -402,9 +403,11 @@ namespace XLua
                 return null;
             }
             LuaAPI.lua_pushvalue(L, idx);
-            return new LuaTable(LuaAPI.luaL_ref(L), translator.luaEnv);
+            int reference = LuaAPI.luaL_ref(L);
+            Debug.LogFormat("luaL_ref LuaTable {0}", reference);
+            return new LuaTable(reference, translator.luaEnv);
         }
-
+        
         private object getLuaFunction(RealStatePtr L, int idx, object target)
         {
             if (LuaAPI.lua_type(L, idx) == LuaTypes.LUA_TUSERDATA)
@@ -417,9 +420,11 @@ namespace XLua
                 return null;
             }
             LuaAPI.lua_pushvalue(L, idx);
-            return new LuaFunction(LuaAPI.luaL_ref(L), translator.luaEnv);
+            int reference = LuaAPI.luaL_ref(L);
+            UnityEngine.Debug.LogFormat("luaL_ref Function {0}", reference);
+            return new LuaFunction(reference, translator.luaEnv);
         }
-
+        
         public void AddCaster(Type type, ObjectCast oc)
         {
             castersMap[type] = oc;
