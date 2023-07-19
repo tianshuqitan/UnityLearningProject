@@ -1,15 +1,13 @@
 print("load LuaCallCs_Create")
 
-local Vector3 = CS.UnityEngine.Vector3
 local GameObject = CS.UnityEngine.GameObject
 
-local metatable = xlua.getmetatable(GameObject)
-
-print("==========================================")
-
-for i, v in pairs(metatable) do
-    print(i,v)
+if false then
+    print("==========================================")
+    local metatable = xlua.getmetatable(GameObject)
+    for i, v in pairs(metatable) do
+        print(i,v)
+    end
 end
 
-local v3 = Vector3(1,2,3)
-
+LuaRootGameObject = GameObject("LuaRootGameObject")
