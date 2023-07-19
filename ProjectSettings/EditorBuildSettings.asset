@@ -6,12 +6,18 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Test/XLua/Scene_Launch.unity
+    path: Assets/Test/XLua/Scene/Launch.unity
     guid: 159313f39cbf65948bd1a3f175652937
   - enabled: 1
-    path: Assets/Test/XLua/Scene/01_CSharpCallLua/CSharpRefLua.unity
+    path: Assets/Test/XLua/Scene/01_CSCallLua/CSRefLua.unity
     guid: c1bd611eded08794999514d9167d8f8e
   - enabled: 1
-    path: Assets/Test/XLua/Scene/01_CSharpCallLua/CSharpCreateLua.unity
+    path: Assets/Test/XLua/Scene/01_CSCallLua/CSCreateLua.unity
     guid: df871a6acdefa7841bcc1a1e4893b43b
+  - enabled: 1
+    path: Assets/Test/XLua/Scene/01_CSCallLua/CSRefFunction.unity
+    guid: 2165f027055208741b4cde661be73815
+  - enabled: 1
+    path: Assets/Test/XLua/Scene/02_LuaCallCS/LuaCreateCS.unity
+    guid: d12cfd4d0dd874d43872dbb6e186b945
   m_configObjects: {}

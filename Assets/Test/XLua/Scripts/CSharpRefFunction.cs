@@ -1,8 +1,8 @@
-using System;
+using Test.XLua.Components;
 using UnityEngine;
 using XLua;
 
-namespace Test.XLua.Scene._01_CSharpCallLua
+namespace Test.XLua.Scripts
 {
     [CSharpCallLua]
     public delegate int Delegate_Test(int a, int b);
@@ -10,24 +10,13 @@ namespace Test.XLua.Scene._01_CSharpCallLua
     public class CSharpRefFunction : MonoBehaviour
     {
         private Delegate_Test addNum;
-
-        // Start is called before the first frame update
-        void Start()
-        {
-            
-        }
-
-        // Update is called once per frame
-        void Update()
-        {
-        }
-
+        
         public void OnLoadLuaFileClick()
         {
-            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.function_ref_test'] = nil");
-            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.function_ref_test')");
+            XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.function_ref_test'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSCallLua.function_ref_test')");
         }
-
+        
         public void OnRefLuaFunctionClick()
         {
             LuaTable tmpTable = XLuaEnv.Instance.Global.Get<LuaTable>("global_reference");
@@ -42,8 +31,8 @@ namespace Test.XLua.Scene._01_CSharpCallLua
 
         public void OnClearLuaFile()
         {
-            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.clear_global_reference'] = nil");
-            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.clear_global_reference')");
+            XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.clear_global_reference'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSCallLua.clear_global_reference')");
         }
         
         public void ExecuteAddNum()

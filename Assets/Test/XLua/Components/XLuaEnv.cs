@@ -2,7 +2,7 @@
 using UnityEngine;
 using XLua;
 
-namespace Test.XLua
+namespace Test.XLua.Components
 {
     public class XLuaEnv
     {
@@ -43,10 +43,10 @@ namespace Test.XLua
 
         private bool m_Initialized = false;
         private LuaEnv m_LuaEnv = null;
-        
+
         private const float m_GCInterval = 2; //1 second
         private float m_LastGCTime = 0;
-        
+
         [SerializeField] private const string m_LuaRootPath = "Test/XLua/LuaScripts";
 
         #endregion
@@ -54,11 +54,11 @@ namespace Test.XLua
         #region Public
 
         #endregion
-        
+
         public LuaTable Global => m_LuaEnv?.Global;
 
         public int Memory => m_LuaEnv?.Memroy ?? 0;
-        
+
         private void InitLuaEnv()
         {
             if (m_Initialized)
@@ -80,7 +80,7 @@ namespace Test.XLua
             {
                 return;
             }
-            
+
             m_LuaEnv.Tick();
             m_LastGCTime = time;
         }
@@ -104,19 +104,15 @@ namespace Test.XLua
         {
             m_LuaEnv?.FullGc();
         }
-        
+
         #endregion
-        
-        
-        
+
         private void Dispose()
         {
             m_LuaEnv?.Dispose();
             m_LuaEnv = null;
         }
-        
-        
-        
+
         #region Other
 
         private static byte[] CustomLuaLoader(ref string filePath)

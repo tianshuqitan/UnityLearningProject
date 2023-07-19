@@ -1,9 +1,10 @@
 using System.Collections.Generic;
+using Test.XLua.Components;
 using UnityEngine;
 using UnityEngine.UI;
 using XLua;
 
-namespace Test.XLua.Scene._01_CSharpCallLua
+namespace Test.XLua.Scripts
 {
     public class CSharpCreateLua : MonoBehaviour
     {
@@ -48,11 +49,6 @@ namespace Test.XLua.Scene._01_CSharpCallLua
             CreateLuaTable(true);
         }
         
-        public void OnGCClick()
-        {
-            XLuaEnv.Instance.FullGc();
-        }
-        
         public void OnCreateTableClick3()
         {
             LuaTable rootTable = XLuaEnv.Instance.NewTable();
@@ -66,8 +62,8 @@ namespace Test.XLua.Scene._01_CSharpCallLua
         
         public void OnCreateTableClick4()
         {
-            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.clear_global'] = nil");
-            XLuaEnv.Instance.DoString("require '01_CSharpCallLua.clear_global'");
+            XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.clear_global'] = nil");
+            XLuaEnv.Instance.DoString("require '01_CSCallLua.clear_global'");
         }
         
         #endregion

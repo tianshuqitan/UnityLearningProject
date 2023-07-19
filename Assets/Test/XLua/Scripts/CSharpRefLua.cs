@@ -1,8 +1,9 @@
+using Test.XLua.Components;
 using UnityEngine;
 using UnityEngine.UI;
 using XLua;
 
-namespace Test.XLua.Scene._01_CSharpCallLua
+namespace Test.XLua.Scripts
 {
     public class CSharpRefLua : MonoBehaviour
     {
@@ -29,8 +30,8 @@ namespace Test.XLua.Scene._01_CSharpCallLua
 
         public void OnLoadLuaFileClick()
         {
-            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.reference_test'] = nil");
-            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.reference_test')");
+            XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.reference_test'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSCallLua.reference_test')");
         }
 
         public void OnLocalRefTableClick()
@@ -63,8 +64,8 @@ namespace Test.XLua.Scene._01_CSharpCallLua
         
         public void OnClearLuaTableClick()
         {
-            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.clear_global_reference'] = nil");
-            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.clear_global_reference')");
+            XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.clear_global_reference'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSCallLua.clear_global_reference')");
         }
 
         public void PrintCSharpReference()
@@ -94,8 +95,8 @@ namespace Test.XLua.Scene._01_CSharpCallLua
         
         public void PrintLuaTable()
         {
-            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.print_global_reference'] = nil");
-            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.print_global_reference')");
+            XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.print_global_reference'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSCallLua.print_global_reference')");
         }
     }
 }
