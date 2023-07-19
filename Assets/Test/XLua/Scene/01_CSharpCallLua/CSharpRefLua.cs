@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.UI;
 using XLua;
 
 namespace Test.XLua.Scene._01_CSharpCallLua
@@ -6,53 +7,95 @@ namespace Test.XLua.Scene._01_CSharpCallLua
     public class CSharpRefLua : MonoBehaviour
     {
         private LuaTable m_LuaTable;
-        
+        public Text m_LoadMark;
+
         private void Start()
         {
-            
+            LuaTable tmp_ref = XLuaEnv.Instance.Global.Get<LuaTable>("global_reference");
+            if (tmp_ref != null)
+            {
+                m_LoadMark.text = "global_reference = " + tmp_ref.Get<string>("name");
+            }
+            else
+            {
+                m_LoadMark.text = "global_reference = nil";
+            }
         }
         
         private void OnDestroy()
         {
-            
+            XLuaEnv.Instance.FullGc();
+        }
+
+        public void OnLoadLuaFileClick()
+        {
+            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.reference_test'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.reference_test')");
+        }
+
+        public void OnLocalRefTableClick()
+        {
+            LuaTable tmp_ref = XLuaEnv.Instance.Global.Get<LuaTable>("global_reference");
+            if (tmp_ref == null)
+            {
+                Debug.LogFormat("global_reference is nil");
+            }
+            else
+            {
+                Debug.LogFormat("global_reference.name = {0}", tmp_ref?.Get<string>("name"));
+            }
+        }
+
+        public void OnMonoRefTableClick()
+        {
+            m_LuaTable = XLuaEnv.Instance.Global.Get<LuaTable>("global_reference");
+            if (m_LuaTable == null)
+            {
+                Debug.LogFormat("global_reference is nil");
+            }
+            else
+            {
+                var name = "";
+                m_LuaTable?.Get("name", out name);
+                Debug.LogFormat("global_reference.name = {0}", name);
+            }
         }
         
-        public void OnLoadClick()
+        public void OnClearLuaTableClick()
         {
-            XLuaEnv.Instance.DoString("require '01_CSharpCallLua.test_ref'");
-            
-            // 局部变量, 不需要调用 Dispose, 自动销毁, 走析构
-            // LuaTable global = m_Env?.Global.Get<LuaTable>("global");
-            // Debug.Log(global?.Get<string>("name"));
-            
-            m_LuaTable = XLuaEnv.Instance.Global.Get<LuaTable>("global");
-            Debug.Log(m_LuaTable?.Get<string>("name"));
+            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.clear_global_reference'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.clear_global_reference')");
         }
-        
-        public void OnDestroyGlobalClick()
+
+        public void PrintCSharpReference()
         {
-            // 这里一定要设置一下, 否则 lua 端还持有 global
-            // m_Env?.Global.Set<string, LuaTable>("global", null);
-            // m_Env?.DoString("global = nil");
-            XLuaEnv.Instance?.DoString("package.loaded['01_CSharpCallLua.clear_global'] = nil");
-            XLuaEnv.Instance?.DoString("require '01_CSharpCallLua.clear_global'");
+            if (m_LuaTable == null)
+            {
+                Debug.Log("LuaTable is null");
+            }
+            else
+            {
+                var name = "";
+                m_LuaTable?.Get("name", out name);
+                Debug.LogFormat("LuaTable.name = {0}", name);
+            }
+        }
+
+        public void OnCSharpLuaTableDispose()
+        {
+            if (m_LuaTable == null)
+            {
+                return;
+            }
             
-            m_LuaTable?.Dispose();
+            m_LuaTable.Dispose();
             m_LuaTable = null;
-            
-            XLuaEnv.Instance?.Tick(Time.time);
-            XLuaEnv.Instance?.FullGc();// = collectgarbage("collect")
-            
-            System.GC.Collect();
-            System.GC.WaitForPendingFinalizers();
         }
         
-        public void OnPrintGlobal()
+        public void PrintLuaTable()
         {
-            XLuaEnv.Instance?.DoString("package.loaded['01_CSharpCallLua.print_global'] = nil");
-            XLuaEnv.Instance?.DoString("require('01_CSharpCallLua.print_global')");
-            
-            Debug.Log(m_LuaTable?.Get<string>("name"));
+            XLuaEnv.Instance.DoString("package.loaded['01_CSharpCallLua.print_global_reference'] = nil");
+            XLuaEnv.Instance.DoString("require('01_CSharpCallLua.print_global_reference')");
         }
     }
 }

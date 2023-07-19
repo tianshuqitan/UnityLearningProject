@@ -1,0 +1,12 @@
+if not global_reference then
+    global_reference = {
+        addNum = function(a, b)
+            return a + b
+        end
+    }
+    global_reference.name = tostring(global_reference)
+    setmetatable(global_reference, {__gc = function(t)
+        print(tostring(t) .. " is gc by lua")
+    end})
+    print("global_reference", global_reference.name)
+end

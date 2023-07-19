@@ -124,7 +124,7 @@ namespace Test.XLua
             filePath = filePath.Replace('.', '/') + ".lua.txt";
 #if UNITY_EDITOR
             filePath = $"{Application.dataPath}/{m_LuaRootPath}/{filePath}";
-            Debug.LogFormat("CustomLuaLoader {0}", filePath);
+            // Debug.LogFormat("CustomLuaLoader {0}", filePath);
             if (File.Exists(filePath))
             {
                 return File.ReadAllBytes(filePath);

@@ -76,3 +76,5 @@ crashlytics-build.properties
 .idea/
 LuaProfiler/
 LuaProfiler.meta
+Gen/
+Gen.meta

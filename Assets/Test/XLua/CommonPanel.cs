@@ -13,5 +13,10 @@ namespace Test.XLua
         {
             SceneManager.LoadScene(m_MainSceneName, LoadSceneMode.Single);
         }
+
+        public void LuaGC()
+        {
+            XLuaEnv.Instance.FullGc();
+        }
     }
 }

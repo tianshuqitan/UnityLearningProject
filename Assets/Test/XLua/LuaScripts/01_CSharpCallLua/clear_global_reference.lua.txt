@@ -1,0 +1,2 @@
+print("clear global reference")
+global_reference = nil

@@ -1,0 +1,9 @@
+if global_reference then
+    global_reference.loadCount = global_reference.loadCount + 1
+else
+    global_reference = setmetatable({}, {__gc = function(t)
+        print(tostring(t) .. " is gc by lua")
+    end})
+    global_reference.name = tostring(global_reference)
+    global_reference.loadCount = 1
+end
