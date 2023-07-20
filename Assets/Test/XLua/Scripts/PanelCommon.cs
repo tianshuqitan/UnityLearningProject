@@ -1,3 +1,4 @@
+using System;
 using Test.XLua.Components;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -7,7 +8,9 @@ namespace Test.XLua.Scripts
     public class PanelCommon : MonoBehaviour
     {
         [SerializeField] private string m_MainSceneName = "Launch";
-
+        
+        public Action OnGCFinish;
+        
         public void GotoMain()
         {
             SceneManager.LoadScene(m_MainSceneName, LoadSceneMode.Single);
@@ -16,6 +19,7 @@ namespace Test.XLua.Scripts
         public void LuaGC()
         {
             XLuaEnv.Instance.FullGc();
+            OnGCFinish?.Invoke();
         }
     }
 }

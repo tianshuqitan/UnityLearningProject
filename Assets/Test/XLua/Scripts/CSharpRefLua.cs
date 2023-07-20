@@ -7,10 +7,20 @@ namespace Test.XLua.Scripts
 {
     public class CSharpRefLua : MonoBehaviour
     {
+        public PanelCommon panelCommon;
         private LuaTable m_LuaTable;
         public Text m_LoadMark;
 
         private void Start()
+        {
+            RefreshGlobalReference();
+            if (panelCommon != null)
+            {
+                panelCommon.OnGCFinish += RefreshGlobalReference;
+            }
+        }
+        
+        private void RefreshGlobalReference()
         {
             LuaTable tmp_ref = XLuaEnv.Instance.Global.Get<LuaTable>("global_reference");
             if (tmp_ref != null)
@@ -25,15 +35,19 @@ namespace Test.XLua.Scripts
         
         private void OnDestroy()
         {
-            XLuaEnv.Instance.FullGc();
+            if (panelCommon != null)
+            {
+                panelCommon.OnGCFinish -= RefreshGlobalReference;
+            }
         }
-
+        
         public void OnLoadLuaFileClick()
         {
             XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.reference_test'] = nil");
             XLuaEnv.Instance.DoString("require('01_CSCallLua.reference_test')");
+            RefreshGlobalReference();
         }
-
+        
         public void OnLocalRefTableClick()
         {
             LuaTable tmp_ref = XLuaEnv.Instance.Global.Get<LuaTable>("global_reference");
@@ -66,8 +80,9 @@ namespace Test.XLua.Scripts
         {
             XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.clear_global_reference'] = nil");
             XLuaEnv.Instance.DoString("require('01_CSCallLua.clear_global_reference')");
+            RefreshGlobalReference();
         }
-
+        
         public void PrintCSharpReference()
         {
             if (m_LuaTable == null)
@@ -91,6 +106,8 @@ namespace Test.XLua.Scripts
             
             m_LuaTable.Dispose();
             m_LuaTable = null;
+            
+            RefreshGlobalReference();
         }
         
         public void PrintLuaTable()

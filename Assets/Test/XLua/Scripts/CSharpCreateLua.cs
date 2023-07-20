@@ -13,7 +13,6 @@ namespace Test.XLua.Scripts
         
         private void Start()
         {
-            XLuaEnv.Instance.FullGc();
             m_LuaTableList = new List<LuaTable>();
         }
         
@@ -64,6 +63,15 @@ namespace Test.XLua.Scripts
         {
             XLuaEnv.Instance.DoString("package.loaded['01_CSCallLua.clear_global'] = nil");
             XLuaEnv.Instance.DoString("require '01_CSCallLua.clear_global'");
+        }
+
+        public void OnMonoDisposeClick()
+        {
+            foreach (var table in m_LuaTableList)
+            {
+                table.Dispose();
+            }
+            m_LuaTableList.Clear();
         }
         
         #endregion

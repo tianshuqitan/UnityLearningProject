@@ -13,4 +13,8 @@ if false then
 end
 
 LuaRootGameObject = GameObject("LuaRootGameObject")
-print("LuaRootGameObject", LuaRootGameObject:IsNull())
+if LuaRootGameObject.IsNull then
+    print("LuaRootGameObject", LuaRootGameObject, LuaRootGameObject:IsNull())
+else
+    print("LuaRootGameObject", LuaRootGameObject)
+end
