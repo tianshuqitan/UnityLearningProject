@@ -1,6 +1,8 @@
 print("load LuaCallCs_Create")
 
-local GameObject = CS.UnityEngine.GameObject
+UnityEngine = CS.UnityEngine
+Vector3 = UnityEngine.Vector3
+GameObject = UnityEngine.GameObject
 
 if false then
     print("==========================================")
@@ -11,3 +13,4 @@ if false then
 end
 
 LuaRootGameObject = GameObject("LuaRootGameObject")
+print("LuaRootGameObject", LuaRootGameObject:IsNull())

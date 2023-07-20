@@ -74,7 +74,9 @@ crashlytics-build.properties
 
 # VS
 .idea/
-LuaProfiler/
-LuaProfiler.meta
-Gen/
-Gen.meta
+
+# Project
+/Assets/Tools/LuaProfiler/
+/Assets/Tools/LuaProfiler.meta
+/Assets/XLua/Gen/
+/Assets/XLua/Gen.meta

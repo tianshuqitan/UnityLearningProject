@@ -1,0 +1,5 @@
+collectgarbage("collect")
+print("LuaRootGameObject", LuaRootGameObject)
+if LuaRootGameObject then
+    LuaRootGameObject.transform.position = Vector3.one;
+end

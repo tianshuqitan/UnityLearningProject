@@ -1,0 +1,17 @@
+print("load LuaCallCs_Test2")
+
+print("LuaRootGameObject", LuaRootGameObject)
+
+UnityEngineObjectExtenstion = CS.Test.XLua.Components.UnityEngineObjectExtenstion
+if LuaRootGameObject then
+    local isNull = false
+    if LuaRootGameObject.IsNull then
+        --isNull = LuaRootGameObject:IsNull()
+        isNull = UnityEngineObjectExtenstion.IsDestroy(LuaRootGameObject)
+        print("LuaRootGameObject.IsNull", tostring(isNull))
+    end
+    
+    if isNull == false then
+        LuaRootGameObject.transform.position = Vector3.one
+    end
+end
