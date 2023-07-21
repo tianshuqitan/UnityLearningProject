@@ -1,0 +1,48 @@
+local Vector3_Metatable = {}
+local Getter = {}
+local Vector3 = {}
+
+local function new_vector3(x, y, z)
+    local t = { x = x or 0, y = y or 0, z = z or 0 }
+    setmetatable(t, Vector3)
+    return t
+end
+
+Vector3.__index = function(t, k)
+    local var = rawget(Vector3, k)
+    if var == nil then
+        var = rawget(Getter, k)
+        if var ~= nil then
+            return var(t)
+        end
+    end
+    return var
+end
+
+Vector3_Metatable.__call = function(_, x, y, z)
+    return new_vector3(x, y, z)
+end
+
+function Vector3.Cross(lhs, rhs)
+    local x = lhs.y * rhs.z - lhs.z * rhs.y
+    local y = lhs.z * rhs.x - lhs.x * rhs.z
+    local z = lhs.x * rhs.y - lhs.y * rhs.x
+    return new_vector3(x, y, z)
+end
+
+function Vector3.Normalize(v)
+    local x, y, z = v.x, v.y, v.z
+
+    local num = math.sqrt(x * x + y * y + z * z)
+    if num > 1e-5 then
+        return setmetatable({ x = x / num, y = y / num, z = z / num }, Vector3)
+    end
+
+    return setmetatable({ x = 0, y = 0, z = 0 }, Vector3)
+end
+
+Getter.normalized = Vector3.Normalize
+
+setmetatable(Vector3, Vector3_Metatable)
+
+return Vector3

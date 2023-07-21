@@ -1,0 +1,3 @@
+local obj = nil
+local ret = obj == nil and false or true
+print("ret = ", ret)
