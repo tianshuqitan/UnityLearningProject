@@ -35,14 +35,14 @@ namespace XLua
 
         public LuaBase(int reference, LuaEnv luaenv)
         {
-            Debug.Log("LuaBase " + reference);
+            // Debug.Log("LuaBase " + reference);
             luaReference = reference;
             luaEnv = luaenv;
         }
         
         ~LuaBase()
         {
-            Debug.Log("~LuaBase " + luaReference);
+            // Debug.Log("~LuaBase " + luaReference);
             Dispose(false);
         }
         
