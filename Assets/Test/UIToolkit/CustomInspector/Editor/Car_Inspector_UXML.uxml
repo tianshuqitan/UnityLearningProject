@@ -1,0 +1,7 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="True">
+    <ui:TextField picking-mode="Ignore" label="Make of the car" value="filler text" text="filler text" binding-path="m_Make" name="Make" />
+    <uie:PropertyField binding-path="m_YearBuilt" label="Year Built" name="Year" />
+    <uie:PropertyField binding-path="m_Color" label="Paint Color" name="Color" />
+    <uie:PropertyField name="Tire" binding-path="m_Tires" label="Tires" />
+    <ui:Foldout text="Default Inspector" name="Default_Inspector" />
+</ui:UXML>
