@@ -12,7 +12,7 @@ public class CustomEditor : EditorWindow
     private int m_ClickCount = 0;
     private const string m_ButtonPrefix = "button";
     
-    [MenuItem("Window/UI Toolkit/CustomEditor")]
+    [MenuItem("Chen/UI Toolkit/CustomEditor")]
     public static void ShowExample()
     {
         var wnd = GetWindow<CustomEditor>();
