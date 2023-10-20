@@ -16,16 +16,12 @@ namespace Learning.Graph.Scripts
         private void Awake()
         {
             var step = 2f / m_Resolution;
-            var position = Vector3.zero;
             var scale = Vector3.one * step;
 
             m_Points = new Transform[m_Resolution * m_Resolution];
-            for (var i = 0; i < m_Points.Length; i++)
+            for (int i = 0, x = 0, z = 0; i < m_Points.Length; i++, x++)
             {
                 var point = m_Points[i] = Instantiate(m_PointPrefab);
-                position.x = (i + 0.5f) * step - 1f;
-                // position.y = position.x * position.x * position.x;
-                point.localPosition = position;
                 point.localScale = scale;
                 point.SetParent(transform, false);
             }
@@ -36,11 +32,16 @@ namespace Learning.Graph.Scripts
         {
             var f = FunctionLibrary.GetFunction(m_FunctionName);
             var time = Time.time;
-            foreach (var point in m_Points)
-            {
-                var position = point.localPosition;
-                position.y = f(position.x,  position.z, time);
-                point.localPosition = position;
+            var step = 2f / m_Resolution;
+            var v = 0.5f * step - 1f;
+            for (int i = 0, x = 0, z = 0; i < m_Points.Length; i++, x++) {
+                if (x == m_Resolution) {
+                    x = 0;
+                    z += 1;
+                    v = (z + 0.5f) * step - 1f;
+                }
+                var u = (x + 0.5f) * step - 1f;
+                m_Points[i].localPosition = f(u, v, time);
             }
         }
     }
