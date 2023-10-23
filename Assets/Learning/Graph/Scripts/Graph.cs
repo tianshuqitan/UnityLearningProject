@@ -15,8 +15,7 @@ namespace Learning.Graph.Scripts
 
         [SerializeField, Range(10, 200)] private int m_Resolution = 10;
 
-        [SerializeField] private FunctionLibrary.FunctionName m_FunctionName = 0; // 当前执行的函数名称
-
+        
         [SerializeField, Min(0f)] private float m_FunctionDuration = 1f; // 函数执行时间
         [SerializeField, Min(0f)] private float m_TransitionDuration = 1f; // 函数转换到另一个的转换时间
         
@@ -24,6 +23,7 @@ namespace Learning.Graph.Scripts
         
         private Transform[] m_Points;
         private float m_Duration;
+        private FunctionLibrary.FunctionName m_FunctionName = 0; // 当前执行的函数名称
         
         private bool m_Transitioning; // 是否在转换中
         private FunctionLibrary.FunctionName m_TransitionFunctionName; // 上一个的执行函数名称(from)
