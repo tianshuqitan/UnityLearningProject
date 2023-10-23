@@ -26,5 +26,8 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Test/XLua/Scene/03_LuaTest/LuaTest.unity
     guid: 8e87675d095cac94f948c94dcd4e5564
+  - enabled: 1
+    path: Assets/Learning/Graph/Scenes/GraphScene.unity
+    guid: cbd49e603b98d344fb14ec95276b1d18
   m_configObjects:
     com.unity.addressableassets: {fileID: 11400000, guid: bea8ab6c1fa03044890a05e6d9a63365, type: 2}

@@ -9,9 +9,7 @@ namespace Learning.Graph.Scripts
 
         private static readonly Function[] Functions =
         {
-            Wave, MultiWave, Ripple,
-            Sphere, Sphere1, Sphere2, Sphere3,
-            Torus, Torus1, Torus2, Torus3
+            Wave, MultiWave, Ripple, Sphere, Torus,
         };
 
         public enum FunctionName
@@ -20,18 +18,25 @@ namespace Learning.Graph.Scripts
             MultiWave,
             Ripple,
             Sphere,
-            Sphere1,
-            Sphere2,
-            Sphere3,
             Torus,
-            Torus1,
-            Torus2,
-            Torus3,
+            Total,
         }
 
-        public static Function GetFunction(FunctionName name)
+        public static int FunctionCount => Functions.Length;
+        
+        public static Function GetFunction(FunctionName name) => Functions[(int)name];
+        
+        public static FunctionName GetNextFunctionName(FunctionName name) => (int)name < Functions.Length - 1 ? name + 1 : 0;
+
+        public static FunctionName GetRandomFunctionName(FunctionName name)
         {
-            return Functions[(int)name];
+            var choice = (FunctionName)Random.Range(1, Functions.Length);
+            return choice == name ? 0 : choice;
+        }
+
+        public static Vector3 Morph(float u, float v, float t, Function from, Function to, float progress)
+        {
+            return Vector3.LerpUnclamped(from(u, v, t), to(u, v, t), SmoothStep(0f, 1f, progress));
         }
 
         private static Vector3 Wave(float u, float v, float t)
