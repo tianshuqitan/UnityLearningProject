@@ -48,27 +48,27 @@ namespace EmmyLua
 			set { EditorPrefs.SetBool(KEY_EMMY_SERVICE_ENABLE, value); }
 		}
 
-		[MenuItem("EmmyLua/Enable")]
+		[MenuItem("Tools/EmmyLua/Enable")]
 		static void EnableService()
 		{
 			IsEnable = true;
 			StartConnect();
 		}
 		
-		[MenuItem("EmmyLua/Enable", true)]
+		[MenuItem("Tools/EmmyLua/Enable", true)]
 		static bool EnableServiceCheck()
 		{
 			return !IsEnable;
 		}
 		
-		[MenuItem("EmmyLua/Disable")]
+		[MenuItem("Tools/EmmyLua/Disable")]
 		static void DisableService()
 		{
 			IsEnable = false;
 			Stop();
 		}
 		
-		[MenuItem("EmmyLua/Disable", true)]
+		[MenuItem("Tools/EmmyLua/Disable", true)]
 		static bool DisableServiceCheck()
 		{
 			return IsEnable;

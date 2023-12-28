@@ -81,3 +81,5 @@ crashlytics-build.properties
 /Assets/XLua/Gen/
 /Assets/XLua/Gen.meta
 ProjectSettings/ProjectVersion.txt
+NPOI.7z
+Scriban.5.9.0.7z
