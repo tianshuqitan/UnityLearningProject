@@ -11,7 +11,7 @@ namespace Test.GraphicView.Editor
         private DialogGraphView m_GraphView;
         private string m_FileName = "New File";
 
-        [MenuItem("Graph/DialogGraph")]
+        [MenuItem("Tools/Test/DialogGraph")]
         public static void OpenDialogGraphWindow()
         {
             var window = GetWindow<DialogGraph>();

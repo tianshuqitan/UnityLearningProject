@@ -1,7 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Test.GraphicView.Runtime;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
+using UnityEditor.UIElements;
 using UnityEngine;
 using UnityEngine.UIElements;
 
@@ -59,12 +62,11 @@ namespace Test.GraphicView.Editor
             return node.InstantiatePort(Orientation.Horizontal, portDirection, capacity, typeof(float));
         }
 
-        public DialogNode CreateDialogNode(string nodeName)
+        public DialogNode CreateDialogNode(SerializedProperty property, SerializedObject obj)
         {
+            Debug.Log("property" + property);
             var node = new DialogNode
             {
-                title = nodeName,
-                DialogText = nodeName,
                 Guid = Guid.NewGuid().ToString(),
             };
 
@@ -81,15 +83,38 @@ namespace Test.GraphicView.Editor
             node.titleContainer.Add(button);
 
             // 添加 Node 标题输入框
-            var textField = new TextField(string.Empty);
-            textField.RegisterValueChangedCallback(evt =>
-            {
-                node.DialogText = evt.newValue;
-                node.title = evt.newValue;
-            });
-            textField.SetValueWithoutNotify(node.title);
-            node.mainContainer.Add(textField);
+            // var textField = new TextField(string.Empty);
+            // textField.RegisterValueChangedCallback(evt =>
+            // {
+            //     node.DialogText = evt.newValue;
+            //     node.title = evt.newValue;
+            // });
+            // textField.SetValueWithoutNotify(node.title);
+            // node.mainContainer.Add(textField);
 
+            if (property != null)
+            {
+                // var test = new PropertyField(property, "TestNum2");
+                // test.Bind(obj);
+                // node.mainContainer.Add(test);
+                //
+                // var test1 = new PropertyField(property.FindPropertyRelative("testBool"), "testBool");
+                // test1.Bind(obj);
+                // node.mainContainer.Add(test1);
+                //
+                // var test2 = new PropertyField(property.FindPropertyRelative("testString"), "testString");
+                // test2.Bind(obj);
+                // node.mainContainer.Add(test2);
+                //
+                // var test3 = new PropertyField(property.FindPropertyRelative("info"), "info");
+                // test3.Bind(obj);
+                // node.mainContainer.Add(test3);
+                
+                var test = new PropertyField(property, "Test");
+                test.Bind(obj);
+                node.mainContainer.Add(test);
+            }
+            
             node.RefreshExpandedState();
             node.RefreshPorts();
             node.SetPosition(new Rect(Vector2.zero, DefaultNodeSize));
@@ -148,7 +173,7 @@ namespace Test.GraphicView.Editor
 
         public void CreateNode(string nodeName)
         {
-            AddElement(CreateDialogNode(nodeName));
+            AddElement(CreateDialogNode(null, null));
         }
 
         public override List<Port> GetCompatiblePorts(Port startPort, NodeAdapter nodeAdapter)

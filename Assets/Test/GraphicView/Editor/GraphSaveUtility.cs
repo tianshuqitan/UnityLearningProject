@@ -12,6 +12,7 @@ namespace Test.GraphicView.Editor
     {
         private DialogGraphView m_TargetGraphView;
         private DialogContainer m_ContainerCache;
+        private SerializedObject m_SerializedObject;
 
         private List<Edge> Edges => m_TargetGraphView.edges.ToList();
         private List<DialogNode> Nodes => m_TargetGraphView.nodes.ToList().Cast<DialogNode>().ToList();
@@ -74,6 +75,8 @@ namespace Test.GraphicView.Editor
                 EditorUtility.DisplayDialog("File Not Found", "Target dialog graph file does not exists!", "OK");
                 return;
             }
+            
+            m_SerializedObject = new SerializedObject(m_ContainerCache);
 
             ClearGraph();
             CreateNodes();
@@ -113,13 +116,15 @@ namespace Test.GraphicView.Editor
 
         private void CreateNodes()
         {
-            foreach (var nodeData in m_ContainerCache.nodeDatas)
+            var nodeDatas = m_ContainerCache.nodeDatas;
+            var nodeDatasFindProperty = m_SerializedObject.FindProperty("nodeDatas");
+            for (var i = 0; i < nodeDatas.Count; i++)
             {
-                var tmpNode = m_TargetGraphView.CreateDialogNode(nodeData.dialogText);
-                tmpNode.Guid = nodeData.guid;
+                var tmpNode = m_TargetGraphView.CreateDialogNode(nodeDatasFindProperty.GetArrayElementAtIndex(i), m_SerializedObject);
+                tmpNode.Guid = nodeDatas[i].guid;
                 m_TargetGraphView.AddElement(tmpNode);
-
-                var nodePorts = m_ContainerCache.linkDatas.Where(x => x.baseNodeGuid == nodeData.guid).ToList();
+                
+                var nodePorts = m_ContainerCache.linkDatas.Where(x => x.baseNodeGuid == nodeDatas[i].guid).ToList();
                 nodePorts.ForEach(x => m_TargetGraphView.AddChoicePort(tmpNode, x.portName));
             }
         }

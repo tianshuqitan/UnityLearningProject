@@ -80,6 +80,8 @@ crashlytics-build.properties
 /Assets/Test.meta
 /Assets/Samples/
 /Assets/Samples.meta
+/Assets/SkillEditor/
+/Assets/SkillEditor.meta
 /Assets/Tools/LuaProfiler/
 /Assets/Tools/LuaProfiler.meta
 /Assets/XLua/Gen/
