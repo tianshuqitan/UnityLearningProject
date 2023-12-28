@@ -1,0 +1,21 @@
+using System;
+using System.Collections.Generic;
+
+namespace {{namespace_name}}
+{
+    public class {{class_name}}
+    {
+        {{~ for field in export_fields ~}}
+        public {{field.field_type}} {{field.field_name}};
+        {{~end~}}
+        
+        public override string ToString()
+        {
+            return $"{{class_name}}{%{{{}%}" +
+                {{~for field in export_fields ~}}
+                   $"{{field.field_name}}: {%{{}%}{{field.field_name}}{%{}}%}" +
+                {{~end~}}
+                   $"{%{}}}%}";
+        }
+    }
+}

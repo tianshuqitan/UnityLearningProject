@@ -1,0 +1,34 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" xsi="http://www.w3.org/2001/XMLSchema-instance" engine="UnityEngine.UIElements" editor="UnityEditor.UIElements" noNamespaceSchemaLocation="../../../../UIElementsSchema/UIElements.xsd" editor-extension-mode="True">
+    <Style src="project://database/Assets/Tools/Excel/Editor/Resources/ExcelToolsWindow.uss?fileID=7433441132597879392&amp;guid=f3fc540c296a88e438059b1b1a8a6324&amp;type=3#ExcelToolsWindow" />
+    <uie:Toolbar>
+        <uie:ToolbarButton text="读取配表" display-tooltip-when-elided="true" name="ToolbarButtonRead" />
+        <uie:ToolbarButton text="创建配表" display-tooltip-when-elided="true" name="ToolbarButtonCreate" />
+        <uie:ToolbarButton text="导出配表" display-tooltip-when-elided="true" name="ToolbarButtonExport" />
+    </uie:Toolbar>
+    <ui:VisualElement name="ReadPanel">
+        <ui:GroupBox>
+            <ui:TextField picking-mode="Ignore" label="文件路径" value="filler text" text="filler text" name="TextFieldFilePath" multiline="true" binding-path="m_FilePath" style="white-space: normal;" />
+            <ui:GroupBox>
+                <ui:Label text="文件内容" display-tooltip-when-elided="true" name="LabelContent" />
+            </ui:GroupBox>
+        </ui:GroupBox>
+        <ui:GroupBox class="GroupBox">
+            <ui:Button text="读取配表" display-tooltip-when-elided="true" name="ButtonReadExcel" />
+            <ui:Button text="导出CS" display-tooltip-when-elided="true" name="ButtonGenerate" />
+        </ui:GroupBox>
+    </ui:VisualElement>
+    <ui:VisualElement name="CreatePanel">
+        <ui:GroupBox>
+            <ui:VisualElement style="flex-direction: row; justify-content: space-between;">
+                <ui:Label text="Label" display-tooltip-when-elided="true" name="LabelFolder" binding-path="m_FolderPath" style="align-items: flex-start; -unity-text-align: middle-left;" />
+                <ui:Button text="打开文件夹" display-tooltip-when-elided="true" name="ButtonOpenFolder" style="white-space: nowrap; -unity-text-align: middle-left;" />
+            </ui:VisualElement>
+            <ui:TextField picking-mode="Ignore" label="名称" value="filler text" text="filler text" name="TextFieldNewName" binding-path="m_ExcelName" />
+            <ui:TextField picking-mode="Ignore" label="扩展名" text="xls" name="TextFieldNewExtension" focusable="true" binding-path="m_ExcelExtension" />
+            <ui:TextField picking-mode="Ignore" label="对应类名" value="filler text" text="filler text" name="TextFieldNewClass" focusable="true" binding-path="m_ExcelClassName" />
+        </ui:GroupBox>
+        <ui:GroupBox>
+            <ui:Button text="生成CS" display-tooltip-when-elided="true" name="ButtonCreateExcel" />
+        </ui:GroupBox>
+    </ui:VisualElement>
+</ui:UXML>

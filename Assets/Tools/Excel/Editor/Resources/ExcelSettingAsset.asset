@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 85ca80428cb5e0d40a14c532453193c5, type: 3}
+  m_Name: ExcelSettingAsset
+  m_EditorClassIdentifier: 
+  filePath: Assets/Tools/Excel/Resources/XlsTest.xls
+  excelFolder: Assets/Tools/Excel/Resources
+  generateFolder: Assets/Tools/Excel/Generate
+  classTemplate: {fileID: 4900000, guid: 40a8fd3972ea59e4bbaf0f039b5c9963, type: 3}
+  fieldTemplate: {fileID: 4900000, guid: 8600a85256be97d40ae76bb2a9a41734, type: 3}
+  relativeList:
+  - excelName: 
+    className: 
