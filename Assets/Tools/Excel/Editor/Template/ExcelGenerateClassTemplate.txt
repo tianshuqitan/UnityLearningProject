@@ -11,9 +11,13 @@ namespace {{namespace_name}}
         
         public override string ToString()
         {
-            return $"{{class_name}}{%{{{}%}" +
+            return $"{{class_name}} {%{{{}%}" +
                 {{~for field in export_fields ~}}
+                   {{~if for.last~}}
                    $"{{field.field_name}}: {%{{}%}{{field.field_name}}{%{}}%}" +
+                   {{~else~}}
+                   $"{{field.field_name}}: {%{{}%}{{field.field_name}}{%{}}%}, " +
+                   {{~end~}}
                 {{~end~}}
                    $"{%{}}}%}";
         }

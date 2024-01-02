@@ -19,15 +19,15 @@ namespace Tools.Excel
             exporter.Export(exportType, sheetName, exportConfig);
         }
 
-        public static T1 Read<T1>(string path, string sheetName, int rowId, ExcelConfig excelConfig)
+        public static T1 Read<T1>(string path, string sheetName, string identify, ExcelConfig excelConfig)
             where T1 : class, new()
         {
             using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
             var excelType = ExcelTypeHelper.GetExcelType(path);
-            return Read<T1>(stream, sheetName, rowId, excelType, excelConfig);
+            return Read<T1>(stream, sheetName, identify, excelType, excelConfig);
         }
 
-        private static T1 Read<T1>(Stream stream, string sheetName, int identify, ExcelType excelType,
+        private static T1 Read<T1>(Stream stream, string sheetName, string identify, ExcelType excelType,
             ExcelConfig excelConfig) where T1 : class, new()
         {
             using var reader = ExcelReaderFactory.GetProvider(stream, excelType, excelConfig);

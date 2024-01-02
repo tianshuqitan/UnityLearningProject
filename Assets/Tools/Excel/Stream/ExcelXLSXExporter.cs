@@ -8,6 +8,7 @@ namespace Tools.Excel
         public ExcelXLSXExporter(Stream stream, ExcelConfig config) : base(stream, config)
         {
             m_Workbook = new XSSFWorkbook(m_Stream);
+            OnWorkbookInit();
         }
     }
 }

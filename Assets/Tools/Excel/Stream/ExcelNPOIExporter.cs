@@ -17,7 +17,7 @@ namespace Tools.Excel
         
         public void Export(ExportType exportType, string sheetName, IExportConfig config)
         {
-            if (ExcelNPOIHelper.IsWorkbookEmpty(m_Workbook))
+            if (NPOIHelper.IsEmpty(m_Workbook))
             {
                 return;
             }

@@ -9,6 +9,7 @@ namespace Tools.Excel
             config)
         {
             m_Workbook = new HSSFWorkbook(m_Stream);
+            OnWorkbookInit();
         }
     }
 }

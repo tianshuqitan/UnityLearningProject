@@ -8,6 +8,7 @@ namespace Tools.Excel
         public ExcelXLSXReader(Stream stream, ExcelConfig configuration) : base(stream, configuration)
         {
             m_Workbook = new XSSFWorkbook(m_Stream);
+            OnWorkbookInit();
         }
     }
 }

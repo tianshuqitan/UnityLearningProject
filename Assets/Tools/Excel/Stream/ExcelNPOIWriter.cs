@@ -20,7 +20,7 @@ namespace Tools.Excel
 
         public bool Write<T>(string path, T value)
         {
-            var className = typeof(T).Name;
+            var className = value.GetType().Name;
             var sheet = m_Workbook.GetSheet(className);
             return sheet != null && Write<T>(path, sheet, value);
         }
@@ -33,12 +33,7 @@ namespace Tools.Excel
             var instanceType = instance.GetType();
             var identifyFieldInfo = instanceType.GetField(headField.FieldName);
             var identifyField = identifyFieldInfo.GetValue(instance).ToString();
-            if (!int.TryParse(identifyField, out var identify))
-            {
-                return false;
-            }
-
-            var row = GetRowByIdentify(sheet, identify);
+            var row = GetRowByIdentify(sheet, identifyField);
             if (row == null)
             {
                 return false;

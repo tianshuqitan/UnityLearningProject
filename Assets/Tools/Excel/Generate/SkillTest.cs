@@ -10,8 +10,8 @@ namespace Tools.Excel
         
         public override string ToString()
         {
-            return $"SkillTest{{" +
-                   $"id: {id}" +
+            return $"SkillTest {{" +
+                   $"id: {id}, " +
                    $"name: {name}" +
                    $"}}";
         }
