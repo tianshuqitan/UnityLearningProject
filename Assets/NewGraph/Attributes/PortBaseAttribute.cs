@@ -14,7 +14,7 @@ namespace NewGraph
         public Func<Type, Type, bool> isValidConnectionCheck = null;
 
         private static Dictionary<ConnectionPolicy, Func<Type, Type, bool>> connectionPolicybehaviors =
-            new Dictionary<ConnectionPolicy, Func<Type, Type, bool>>()
+            new()
             {
                 { ConnectionPolicy.Identical, (input, output) => input == output },
                 {
@@ -23,13 +23,6 @@ namespace NewGraph
                 },
             };
 
-        /// <summary>
-        /// Port Base attribute. This needs to be added to every SerializeReference field that should show up in the graph as a assignable node.
-        /// You'll mostly want to use the Port attribute instead.
-        /// </summary>
-        /// <param name="capacity">How many connections are allowed.</param>
-        /// <param name="direction">What port direction do we want to display?</param>
-        /// <param name="connectionPolicy">What connections are allowed only to the matching class or subclasses as well?</param>
         public PortBaseAttribute(string name = null, Port.Capacity capacity = Port.Capacity.Single,
             Direction direction = Direction.Input, ConnectionPolicy connectionPolicy = ConnectionPolicy.Unspecified)
         {

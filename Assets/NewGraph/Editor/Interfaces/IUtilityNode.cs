@@ -1,5 +1,7 @@
-namespace NewGraph {
-    public interface IUtilityNode {
+namespace NewGraph
+{
+    public interface IUtilityNode
+    {
         bool ShouldColorizeBackground();
         bool CreateInspectorUI();
         bool CreateNameUI();

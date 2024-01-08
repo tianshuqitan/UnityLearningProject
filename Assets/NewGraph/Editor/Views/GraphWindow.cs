@@ -11,7 +11,7 @@ namespace NewGraph
 
     public class GraphWindow : EditorWindow
     {
-        private static readonly Dictionary<Type, Type> inspectorControllerLookup = new Dictionary<Type, Type>()
+        private static readonly Dictionary<Type, Type> inspectorControllerLookup = new()
         {
             { typeof(ScriptableGraphModel), typeof(ScriptableInspectorController) },
             { typeof(MonoGraphModel), typeof(MonoInspectorController) },
@@ -99,7 +99,7 @@ namespace NewGraph
             {
                 return;
             }
-            
+
             if (lastKeyCode != evt.keyCode || lastModifiers != evt.modifiers)
             {
                 lastModifiers = evt.modifiers;
@@ -193,8 +193,6 @@ namespace NewGraph
             graphView.StretchToParentSize();
             graphRoot.Add(graphView);
             
-            root.RegisterCallback<MouseDownEvent>(OnMouseDown);
-
             root.styleSheets.Add(graphStylesheetVariables);
             root.styleSheets.Add(graphStylesheet);
 
@@ -212,12 +210,6 @@ namespace NewGraph
 
                 loadRequested = false;
             });
-        }
-        
-        private void OnMouseDown(MouseDownEvent evt)
-        {
-            var graphView = graphController.graphView;
-            graphView.OnMouseDown(evt);
         }
     }
 }

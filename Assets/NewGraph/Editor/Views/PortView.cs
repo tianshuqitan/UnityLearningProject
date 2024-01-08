@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
-using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace NewGraph
@@ -13,7 +12,7 @@ namespace NewGraph
     {
         private UnityEngine.Color DisabledPortColor => Settings.disabledPortColor;
         private UnityEngine.Color DefaultPortColor => Settings.portColor;
-        public SerializedProperty m_BoundProperty;
+        public SerializedProperty boundProperty;
         private Action m_ConnectionChangedCallback;
         private Func<Type, Type, bool> m_IsValidConnectionCheck;
         private UnityEngine.Color targetColor;
@@ -32,12 +31,12 @@ namespace NewGraph
             var direction = (Direction)(int)(info.portDisplay.direction);
             var capacity = (Capacity)(int)(info.portDisplay.capacity);
             var listener = new EdgeConnectorListener();
-            var port = new PortView(Orientation.Horizontal, direction, capacity, typeof(Node))
+            var port = new PortView(Orientation.Horizontal, direction, capacity, info.fieldType)
             {
                 m_EdgeConnector = new EdgeConnector<TEdge>(listener),
                 m_IsValidConnectionCheck = info.portDisplay.isValidConnectionCheck,
                 ConnectableTypes = info.connectableTypes,
-                m_BoundProperty = boundProperty,
+                boundProperty = boundProperty,
                 m_ConnectionChangedCallback = changedCallback,
             };
             port.AddManipulator(port.m_EdgeConnector);
@@ -62,10 +61,10 @@ namespace NewGraph
             var inputPort = edge.input as PortView;
             var outputPort = edge.output as PortView;
 
-            if (outputPort.m_BoundProperty.managedReferenceValue != inputPort.m_BoundProperty.managedReferenceValue)
+            if (outputPort.boundProperty.managedReferenceValue != inputPort.boundProperty.managedReferenceValue)
             {
-                outputPort.m_BoundProperty.managedReferenceId = inputPort.m_BoundProperty.managedReferenceId;
-                outputPort.m_BoundProperty.serializedObject.ApplyModifiedProperties();
+                outputPort.boundProperty.managedReferenceId = inputPort.boundProperty.managedReferenceId;
+                outputPort.boundProperty.serializedObject.ApplyModifiedProperties();
                 m_ConnectionChangedCallback?.Invoke();
             }
 
@@ -74,13 +73,13 @@ namespace NewGraph
 
         public void Reset()
         {
-            if (m_BoundProperty == null)
+            if (boundProperty == null)
             {
                 return;
             }
 
-            m_BoundProperty.managedReferenceValue = null;
-            m_BoundProperty.serializedObject.ApplyModifiedProperties();
+            boundProperty.managedReferenceValue = null;
+            boundProperty.serializedObject.ApplyModifiedProperties();
             m_ConnectionChangedCallback?.Invoke();
         }
 
@@ -88,7 +87,7 @@ namespace NewGraph
         {
             PortView outputPort;
             PortView inputPort;
-        
+
             if (direction == Direction.Output)
             {
                 outputPort = this;
@@ -99,12 +98,12 @@ namespace NewGraph
                 outputPort = (PortView)other;
                 inputPort = this;
             }
-        
+
             if (!m_IsValidConnectionCheck(inputPort.portType, outputPort.portType))
             {
                 return false;
             }
-        
+
             return true;
         }
 

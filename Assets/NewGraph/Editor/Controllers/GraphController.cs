@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEditor.UIElements;
@@ -10,23 +9,21 @@ using UnityEngine.UIElements;
 
 namespace NewGraph
 {
-    using static GraphSettings;
-
     public class GraphController
     {
         public event Action<IGraphModelData> OnGraphLoaded;
         public event Action<IGraphModelData> OnBeforeGraphLoaded;
 
         public IGraphModelData graphData = null;
-        public CopyPasteHandler copyPasteHandler = new CopyPasteHandler();
+        public CopyPasteHandler copyPasteHandler = new();
         public GraphView graphView;
 
+        private readonly InspectorControllerBase m_Inspector;
+        private readonly ContextMenu m_ContextMenu;
+        private readonly EdgeDropMenu m_EdgeDropMenu;
+        private readonly Dictionary<Actions, Action<object>> m_InternalActions;
+        private readonly Dictionary<object, NodeView> m_DataToViewLookup = new();
         private bool isLoading = false;
-        private InspectorControllerBase inspector;
-        private ContextMenu contextMenu;
-        private EdgeDropMenu edgeDropMenu;
-        private Dictionary<Actions, Action<object>> internalActions;
-        private Dictionary<object, NodeView> dataToViewLookup = new Dictionary<object, NodeView>();
 
         public void ForEachNode(Action<Node> callback)
         {
@@ -35,21 +32,22 @@ namespace NewGraph
 
         public GraphController(VisualElement uxmlRoot, VisualElement root, Type inspectorType)
         {
-            graphView = new GraphView(root, OnGraphAction);
+            graphView = new GraphView(this, OnGraphAction);
             graphView.viewTransformChanged -= OnViewportChanged;
             graphView.viewTransformChanged += OnViewportChanged;
-            graphView.OnMouseDown -= OpenContextMenu;
-            graphView.OnMouseDown += OpenContextMenu;
-
-            inspector = Activator.CreateInstance(inspectorType, uxmlRoot) as InspectorControllerBase;
-            inspector.OnShouldLoadGraph = OnShouldLoadGraph;
-            inspector.OnAfterGraphCreated = OnAfterGraphCreated;
-            inspector.OnHomeClicked = OnHomeClicked;
+            
+            m_Inspector = Activator.CreateInstance(inspectorType, uxmlRoot) as InspectorControllerBase;
+            if (m_Inspector != null)
+            {
+                m_Inspector.OnShouldLoadGraph = OnShouldLoadGraph;
+                m_Inspector.OnAfterGraphCreated = OnAfterGraphCreated;
+                m_Inspector.OnHomeClicked = OnHomeClicked;
+            }
 
             Undo.undoRedoPerformed -= Reload;
             Undo.undoRedoPerformed += Reload;
 
-            internalActions = new Dictionary<Actions, Action<object>>()
+            m_InternalActions = new Dictionary<Actions, Action<object>>()
             {
                 { Actions.Paste, OnPaste },
                 { Actions.Delete, OnDelete },
@@ -64,83 +62,67 @@ namespace NewGraph
                 { Actions.Rename, OnRename },
             };
 
-            if (contextMenu == null)
-            {
-                contextMenu = ContextMenu.CreateContextMenu(this);
-                contextMenu.BuildContextMenu();
-            }
+            m_ContextMenu = ContextMenu.CreateContextMenu(this);
+            m_ContextMenu.BuildContextMenu();
 
-            if (edgeDropMenu == null)
-            {
-                edgeDropMenu = EdgeDropMenu.CreateEdgeDropMenu(this);
-            }
+            m_EdgeDropMenu = EdgeDropMenu.CreateEdgeDropMenu(this);
         }
 
         public void OnRename(object obj)
         {
-            if (graphView.GetSelectedNodeCount() == 1)
+            if (graphView.GetSelectedNodeCount() != 1)
             {
-                NodeView node = graphView.GetFirstSelectedNode() as NodeView;
-                foreach (EditableLabelElement label in node.editableLabels)
-                {
-                    label.EnableInput(!label.isInEditMode);
-                    break;
-                }
+                return;
+            }
+
+            var nodeView = graphView.GetFirstSelectedNode();
+            if (nodeView == null)
+            {
+                return;
+            }
+
+            foreach (var label in nodeView.editableLabels)
+            {
+                label.EnableInput(!label.isInEditMode);
+                break;
             }
         }
 
         private void OnEdgeDrop(object edge)
         {
             var baseEdge = (Edge)edge;
-            if (baseEdge == null) return;
-
-            PortView port = baseEdge.output != null ? baseEdge.output as PortView : null;
-            if (port != null)
+            if (baseEdge?.output is not PortView port)
             {
-                edgeDropMenu.port = port;
-                edgeDropMenu.BuildContextMenu();
-                SearchWindow.Open(edgeDropMenu, graphView);
+                return;
             }
-        }
 
-        private void OpenContextMenu(MouseDownEvent evt)
+            m_EdgeDropMenu.port = port;
+            m_EdgeDropMenu.BuildContextMenu();
+            SearchWindow.Open(m_EdgeDropMenu, graphView);
+        }
+        
+        public void OpenContextMenu()
         {
-            if (evt.button == 1)
+            graphView.schedule.Execute(() =>
             {
-                graphView.schedule.Execute(() => { SearchWindow.Open(contextMenu, graphView); });
-            }
+                SearchWindow.Open(m_ContextMenu, graphView);
+            });
         }
-
-        /// <summary>
-        /// Re-focus the graph to the center based on all present nodes.
-        /// </summary>
+        
         private void OnHomeClicked()
         {
             graphView.ClearSelection();
             FrameGraph();
         }
 
-        /// <summary>
-        /// Frame the graph based on the active selection.
-        /// </summary>
         public void FrameGraph(object _ = null)
         {
             graphView.FrameSelected();
         }
 
-        /// <summary>
-        /// find a node in the lookuptable of nodes.
-        /// </summary>
-        /// <param name="serializedValue"></param>
-        /// <returns></returns>
         public NodeView GetNodeView(object serializedValue)
         {
-            if (dataToViewLookup.ContainsKey(serializedValue))
-            {
-                return dataToViewLookup[serializedValue];
-            }
-
-            return null;
+            return m_DataToViewLookup.ContainsKey(serializedValue) ? m_DataToViewLookup[serializedValue] : null;
         }
 
         public void Disable()
@@ -148,93 +130,67 @@ namespace NewGraph
             EnsureSerialization();
         }
 
-        /// <summary>
-        /// Ensure that every change is written to disk.
-        /// </summary>
         public void EnsureSerialization()
         {
-            if (graphData != null && graphData.SerializedGraphData != null)
+            if (graphData?.SerializedGraphData == null)
             {
-                Logger.Log("save");
-                graphData.ForceSerializationUpdate();
-                AssetDatabase.SaveAssets();
+                return;
             }
+
+            graphData.ForceSerializationUpdate();
+            AssetDatabase.SaveAssets();
         }
 
-        /// <summary>
-        /// Called when "something" was selected in this graph
-        /// </summary>
-        /// <param name="data">currently unused, check selected lists to get the actual selected objects...</param>
         private void OnSelected(object data = null)
         {
             Debug.Log("OnSelected");
-            inspector.SetInspectorContent(null);
-            inspector.SetSelectedNodeInfoActive(active: false);
+            m_Inspector.SetInspectorContent(null);
+            m_Inspector.SetSelectedNodeInfoActive(active: false);
 
-            int selectedNodesCount = graphView.GetSelectedNodeCount();
+            var selectedNodesCount = graphView.GetSelectedNodeCount();
             if (selectedNodesCount > 1)
             {
-                inspector.SetSelectedNodeInfoActive(selectedNodesCount, graphView.GetSelectedEdgesCount(), true);
+                m_Inspector.SetSelectedNodeInfoActive(selectedNodesCount, graphView.GetSelectedEdgesCount(), true);
             }
             else if (selectedNodesCount > 0)
             {
-                NodeView selectedNode = graphView.GetFirstSelectedNode() as NodeView;
-                inspector.SetInspectorContent(selectedNode.GetInspectorContent(), graphData.SerializedGraphData);
+                var nodeView = graphView.GetFirstSelectedNode();
+                if (nodeView != null)
+                {
+                    m_Inspector.SetInspectorContent(nodeView.GetInspectorContent(), graphData.SerializedGraphData);
+                }
             }
         }
 
-        /// <summary>
-        /// Called when "something" was de-selected in this graph
-        /// </summary>
-        /// <param name="data">currently unused, check selected lists to get the actual selected objects...</param>
         private void OnDeselected(object data = null)
         {
-            inspector.SetInspectorContent(null);
-            inspector.SetSelectedNodeInfoActive(active: false);
+            m_Inspector.SetInspectorContent(null);
+            m_Inspector.SetSelectedNodeInfoActive(active: false);
         }
 
-        /// <summary>
-        /// Called if a copy operation should be started...
-        /// </summary>
-        /// <param name="data">currently unused, check selected lists to get the actual selected objects...</param>
         public void OnCopy(object data = null)
         {
+            var nodesToCapture = new List<NodeView>();
+            graphView.ForEachSelectedNodeDo((node) =>
             {
-                List<NodeView> nodesToCapture = new List<NodeView>();
-
-                graphView.ForEachSelectedNodeDo((node) =>
+                if (node is NodeView scopedNodeView)
                 {
-                    NodeView scopedNodeView = node as NodeView;
-                    if (scopedNodeView != null)
-                    {
-                        nodesToCapture.Add(scopedNodeView);
-                    }
-                });
-
-                copyPasteHandler.CaptureSelection(nodesToCapture, graphData);
-            }
+                    nodesToCapture.Add(scopedNodeView);
+                }
+            });
+            copyPasteHandler.CaptureSelection(nodesToCapture, graphData);
         }
 
-        /// <summary>
-        /// Called if a paste operation should be started...
-        /// </summary>
-        /// <param name="data">currently unused, check selected lists to get the actual selected objects...</param>
         public void OnPaste(object data = null)
         {
             copyPasteHandler.Resolve(graphData, (nodes) =>
             {
                 Undo.RecordObject(graphData.BaseObject, "Paste Action");
-                // position node clones relative to the current mouse position & add them to the current graph
-                Vector2 viewPosition = graphView.GetMouseViewPosition();
+                var viewPosition = graphView.GetMouseViewPosition();
                 PositionNodesRelative(viewPosition, nodes);
             }, Reload);
         }
 
-        /// <summary>
-        /// Positions a set of nodes relative to the given view Position
-        /// </summary>
-        /// <param name="viewPosition"></param>
-        /// <param name="nodes"></param>
         private void PositionNodesRelative(Vector2 viewPosition, List<NodeModel> nodes)
         {
             if (nodes == null || nodes.Count == 0)
@@ -242,141 +198,107 @@ namespace NewGraph
                 return;
             }
 
-            Bounds bounds = new Bounds(nodes[0].GetPosition(), Vector3.zero);
-            foreach (NodeModel node in nodes)
+            var bounds = new Bounds(nodes[0].GetPosition(), Vector3.zero);
+            foreach (var node in nodes)
             {
                 bounds.Encapsulate(node.GetPosition());
             }
 
             Vector2 refPos = bounds.center;
-            Vector2 newBasePos = new Vector2(refPos.x + (viewPosition.x - refPos.x),
+            var newBasePos = new Vector2(refPos.x + (viewPosition.x - refPos.x),
                 refPos.y + (viewPosition.y - refPos.y));
 
-            foreach (NodeModel node in nodes)
+            foreach (var node in nodes)
             {
-                Vector2 oldPos = node.GetPosition();
-                Vector2 offset = (refPos - oldPos).normalized * Vector2.Distance(oldPos, refPos);
-                Vector2 newPos = newBasePos - offset;
+                var oldPos = node.GetPosition();
+                var offset = (refPos - oldPos).normalized * Vector2.Distance(oldPos, refPos);
+                var newPos = newBasePos - offset;
                 node.SetPosition(newPos.x, newPos.y);
             }
         }
 
-        /// <summary>
-        /// Called if a delete operation should be started...
-        /// </summary>
-        /// <param name="data"></param>
         public void OnDelete(object data = null)
         {
+            var isDirty = false;
+
+            graphView.ForEachSelectedEdgeDo((edge) =>
             {
-                bool isDirty = false;
-
-                // go over every selected edge...
-                graphView.ForEachSelectedEdgeDo((edge) =>
+                isDirty = true;
+                if (edge.output is PortView outputPort)
                 {
-                    isDirty = true;
-                    // get the ouput port, this is where the referenced node sits
-                    PortView outputPort = edge.output as PortView;
                     outputPort.Reset();
-                });
+                }
+            });
 
-                // go over every selected node and build a list of nodes that should be deleted....
-                List<NodeModel> nodesToRemove = new List<NodeModel>();
-                graphView.ForEachSelectedNodeDo((node) =>
+            var nodesToRemove = new List<NodeModel>();
+            graphView.ForEachSelectedNodeDo((node) =>
+            {
+                if (node is not NodeView scopedNodeView)
                 {
-                    NodeView scopedNodeView = node as NodeView;
-                    if (scopedNodeView != null)
+                    return;
+                }
+
+                nodesToRemove.Add(scopedNodeView.controller.nodeItem);
+                isDirty = true;
+            });
+
+            if (nodesToRemove.Count > 0)
+            {
+                graphView.ForEachPortDo((basePort) =>
+                {
+                    if (basePort.direction != Direction.Output)
                     {
-                        nodesToRemove.Add(scopedNodeView.controller.nodeItem);
-                        isDirty = true;
+                        return;
+                    }
+
+                    var port = basePort as PortView;
+                    if (port != null && (port.boundProperty?.managedReferenceValue == null))
+                    {
+                        return;
+                    }
+
+                    if (nodesToRemove.Any(nodeToRemove =>
+                            nodeToRemove.nodeData == port.boundProperty.managedReferenceValue))
+                    {
+                        port.Reset();
                     }
                 });
-
-                // if we have nodes marked for deletion...
-                if (nodesToRemove.Count > 0)
-                {
-                    // tidy up all ports before actual deletion...
-                    graphView.ForEachPortDo((basePort) =>
-                    {
-                        // we can ignore input ports, so check that we only operate on output ports...
-                        if (basePort.direction == Direction.Output)
-                        {
-                            PortView port = basePort as PortView;
-                            // check that the port actually is not empty...
-                            if (port.m_BoundProperty != null && port.m_BoundProperty.managedReferenceValue != null)
-                            {
-                                // loop over the list of nodes that should be removed...
-                                foreach (NodeModel nodeToRemove in nodesToRemove)
-                                {
-                                    // if the ports actual object value is equal to a node that should be removed...
-                                    if (nodeToRemove.nodeData == port.m_BoundProperty.managedReferenceValue)
-                                    {
-                                        // reset / nullify the port value to we don't have invisible nodes in our graph...
-                                        port.Reset();
-                                        break;
-                                    }
-                                }
-                            }
-                        }
-                    });
-                }
-
-                // if we are dirty and objects were changed....
-                if (isDirty)
-                {
-                    // unbind and reload this graph to avoid serialization issues...
-                    graphView.Unbind();
-                    //graphView.schedule.Execute(() => {
-                    graphData.RemoveNodes(nodesToRemove);
-                    Reload();
-                    //});
-                }
             }
+
+            if (!isDirty)
+            {
+                return;
+            }
+
+            graphView.Unbind();
+            graphData.RemoveNodes(nodesToRemove);
+            Reload();
         }
 
-        /// <summary>
-        /// Called if a cut operation should be started...
-        /// </summary>
-        /// <param name="data">currently unused, check selected lists to get the actual selected objects...</param>
         public void OnCut(object data = null)
         {
             OnCopy();
             OnDelete();
         }
 
-        /// <summary>
-        /// Called if a duplication operation should be started...
-        /// </summary>
-        /// <param name="data">currently unused, check selected lists to get the actual selected objects...</param>
         public void OnDuplicate(object data = null)
         {
             OnCopy();
             OnPaste();
         }
 
-        /// <summary>
-        /// Called when an edge should be created...
-        /// </summary>
-        /// <param name="data">the edge</param>
         private void OnEdgeCreate(object data = null)
         {
             var edge = (Edge)data;
             graphView.AddElement(edge);
         }
 
-        /// <summary>
-        /// Called when an edge should be removed...
-        /// </summary>
-        /// <param name="data">the edge</param>
         private void OnEdgeDelete(object data = null)
         {
             var edge = (Edge)data;
             graphView.RemoveElement(edge);
         }
 
-        /// <summary>
-        /// Called when something in the viewport changed...
-        /// </summary>
-        /// <param name="data">unused</param>
         private void OnViewportChanged(VisualElement contentContainer)
         {
             if (graphData != null && graphData.BaseObject != null)
@@ -385,40 +307,25 @@ namespace NewGraph
             }
         }
 
-        /// <summary>
-        /// Called to reload the complete graph...
-        /// </summary>
         public void Reload()
         {
-            Logger.Log("reload");
-            if (graphData != null /*&& graphData.BaseObject != null*/)
+            if (graphData != null)
             {
                 Load(graphData);
             }
         }
 
-        /// <summary>
-        /// Method to receive / tap into the action stream of the base graphview.
-        /// This is useful to extend/ add more keyboard shortcuts to those already present...
-        /// </summary>
-        /// <param name="actionType">the actionType that was recognized</param>
-        /// <param name="data">The actionData object that was given</param>
         private void OnGraphAction(Actions actionType, object data = null)
         {
-            if (internalActions.ContainsKey(actionType))
+            if (m_InternalActions.ContainsKey(actionType))
             {
-                internalActions[actionType](data);
+                m_InternalActions[actionType](data);
             }
         }
 
-        /// <summary>
-        /// Create a new node for the graph simply based on a valid type.
-        /// </summary>
-        /// <param name="nodeType">The node type.</param>
         public NodeView CreateNewNode(Type nodeType, bool isUtilityNode = false)
         {
-            // get the current view position of the mouse, so we can display the new node at the tip of the mouse...
-            Vector2 viewPosition = graphView.GetMouseViewPosition();
+            var viewPosition = graphView.GetMouseViewPosition();
 
             var node = Activator.CreateInstance(nodeType) as INode;
             var nodeItem = graphData.AddNode(node, isUtilityNode);
@@ -430,71 +337,48 @@ namespace NewGraph
             graphView.AddElement(nodeView);
             nodeController.Initialize();
 
-
-            // Select newly created node
             graphView.SetSelected(nodeController.nodeView);
 
-            dataToViewLookup.Add(nodeItem.nodeData, nodeController.nodeView);
+            m_DataToViewLookup.Add(nodeItem.nodeData, nodeController.nodeView);
             return nodeController.nodeView;
         }
 
-        /// <summary>
-        /// Called when a new graph asset was created and should now be loaded...
-        /// </summary>
-        /// <param name="graphData"></param>
         private void OnAfterGraphCreated(IGraphModelData graphData)
         {
             graphView.ClearView();
             this.graphData = graphData;
         }
 
-        /// <summary>
-        /// Called when we should load a graph...
-        /// </summary>
-        /// <param name="graphData"></param>
         private void OnShouldLoadGraph(IGraphModelData graphData)
         {
-            inspector.CreateRenameGraphUI(graphData);
-            inspector.Clear();
+            m_Inspector.CreateRenameGraphUI(graphData);
+            m_Inspector.Clear();
             Load(graphData);
         }
 
-        /// <summary>
-        /// Opens a new graph from an external resource.
-        /// </summary>
-        /// <param name="baseGraphModel">The graph data that should get loaded.</param>
         public void OpenGraphExternal(IGraphModelData baseGraphModel)
         {
             OnShouldLoadGraph(baseGraphModel);
         }
 
-        /// <summary>
-        /// Called when we actually should load a graph...
-        /// </summary>
-        /// <param name="graphData"></param>
         private void Load(IGraphModelData graphData)
         {
             OnBeforeGraphLoaded?.Invoke(graphData);
 
-            // return early if we are already in the process of loading a graph...
             if (isLoading)
             {
                 return;
             }
 
-            // make sure to save the old graphs state...
             EnsureSerialization();
 
-            // signal we are in the process of loading...
             isLoading = true;
 
-            // clear everything up since we have changed contexts....
-            inspector.Clear();
+            m_Inspector.Clear();
             graphView.ClearView();
-            dataToViewLookup.Clear();
-            inspector.SetSelectedNodeInfoActive(active: false);
+            m_DataToViewLookup.Clear();
+            m_Inspector.SetSelectedNodeInfoActive(active: false);
 
-            // offload the actual loading to the next frame...
             graphView.schedule.Execute(() =>
             {
                 this.graphData = graphData;
@@ -503,10 +387,6 @@ namespace NewGraph
                     this.graphData.CreateSerializedObject();
                 }
 
-                // remember that this is our currently opened graph...
-                // SetLastOpenedGraphData(this.graphData);
-
-                // update the viewport to the last saved location
                 if (this.graphData.ViewportInitiallySet)
                 {
                     graphView.UpdateViewTransform(this.graphData.ViewPosition, this.graphData.ViewScale);
@@ -514,12 +394,9 @@ namespace NewGraph
 
                 void ForEachNodeProperty(List<NodeModel> nodes, SerializedProperty nodesProperty)
                 {
-                    // go over every node...
-                    for (int i = 0; i < nodes.Count; i++)
+                    for (var i = 0; i < nodes.Count; i++)
                     {
-                        NodeModel node = nodes[i];
-
-                        // initialize the node...
+                        var node = nodes[i];
                         node.Initialize();
 
                         var nodeSerializedData = nodesProperty.GetArrayElementAtIndex(i);
@@ -530,15 +407,15 @@ namespace NewGraph
                         nodeView.OnNodeViewSelected = OnSelected;
                         graphView.AddElement(nodeView);
                         nodeController.Initialize();
-                        dataToViewLookup.Add(node.nodeData, nodeView);
+                        m_DataToViewLookup.Add(node.nodeData, nodeView);
                     }
                 }
 
                 var nodesProperty = this.graphData.GetNodesProperty(false);
                 ForEachNodeProperty(this.graphData.Nodes, nodesProperty);
 
-                var utilitiyNodesProperty = this.graphData.GetNodesProperty(true);
-                ForEachNodeProperty(this.graphData.UtilityNodes, utilitiyNodesProperty);
+                var utilityNodesProperty = this.graphData.GetNodesProperty(true);
+                ForEachNodeProperty(this.graphData.UtilityNodes, utilityNodesProperty);
 
                 graphView.ForEachNodeDo((node) =>
                 {
@@ -549,13 +426,13 @@ namespace NewGraph
 
                     foreach (var port in nodeView.OutputPorts)
                     {
-                        var value = port.m_BoundProperty.managedReferenceValue;
-                        if (value == null || !dataToViewLookup.ContainsKey(value))
+                        var value = port.boundProperty.managedReferenceValue;
+                        if (value == null || !m_DataToViewLookup.ContainsKey(value))
                         {
                             continue;
                         }
 
-                        var otherView = dataToViewLookup[value];
+                        var otherView = m_DataToViewLookup[value];
                         if (otherView.controller.nodeItem.nodeData == value)
                         {
                             ConnectPorts(port, otherView.InputPort);
@@ -563,40 +440,9 @@ namespace NewGraph
                     }
                 });
 
-                Port outPort = null;
-                foreach (var port in graphView.ports)
-                {
-                    Debug.LogFormat("ports {0} {1} {2}", port.portName, port.direction, port.node);
-                    if (port.direction == Direction.Output)
-                    {
-                        outPort = port;
-                    }
-                }
-
-                GetCompatiblePorts(outPort);
-
                 isLoading = false;
                 OnGraphLoaded?.Invoke(this.graphData);
             });
-        }
-
-        public virtual List<Port> GetCompatiblePorts(Port startPort)
-        {
-            var nodeAdapter = new NodeAdapter();
-            var portList = graphView.ports.ToList();
-            var resultList = new List<Port>();
-            foreach (var port in portList)
-            {
-                if (port.direction != startPort.direction && port.node != startPort.node)
-                {
-                    if (nodeAdapter.GetAdapter(port.source, startPort.source) != (MethodInfo)null)
-                    {
-                        resultList.Add(port);
-                    }
-                }
-            }
-            
-            return resultList;
         }
 
         public void ConnectPorts(PortView input, PortView output)
@@ -607,7 +453,7 @@ namespace NewGraph
         public void Draw()
         {
             SearchWindow.targetPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
-            inspector.Draw();
+            m_Inspector.Draw();
         }
     }
 }

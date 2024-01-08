@@ -5,7 +5,8 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
-namespace NewGraph {
+namespace NewGraph
+{
     /// <summary>
     /// Based on: https://github.com/Unity-Technologies/UnityCsReference/blob/2022.2/Modules/GraphViewEditor/NodeSearch/SearchWindow.cs
     /// Converted to our own class so this works even if unity decides to change the API.
@@ -18,13 +19,16 @@ namespace NewGraph {
     /// Inofficially: I found this video that goes through it in detail: https://www.youtube.com/watch?v=S9NgPKJpJkU
     /// </summary>
     [InitializeOnLoad]
-    public class SearchWindow : EditorWindow {
-
+    public class SearchWindow : EditorWindow
+    {
         // Sadly, we need to invoke a method that was marked as "internal" by untiy which prevents us from accessing it.
         // Thankfully, using reflection, we can push through this barrier and still call it. He he he, evil us!
         private static readonly System.Reflection.MethodInfo SearchField = null;
+
         // binding flags to successfully capture the SearchField method
-        private const System.Reflection.BindingFlags methodRetrievalFlags = System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+        private const System.Reflection.BindingFlags methodRetrievalFlags =
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static;
+
         // cached version of the searchfield parameters to avoid some garbage as the method is called very often (OnGUI loop)
         private object[] SearchFieldParameters = new object[2];
 
@@ -34,14 +38,16 @@ namespace NewGraph {
         /// <param name="searchRect">Rect of the search field.</param>
         /// <param name="searchString">The string that should be searched for.</param>
         /// <returns>The current search string.</returns>
-        private string EditorGUISearchField(Rect searchRect, string searchString) {
+        private string EditorGUISearchField(Rect searchRect, string searchString)
+        {
             SearchFieldParameters[0] = searchRect;
             SearchFieldParameters[1] = searchString;
             return SearchField.Invoke(null, SearchFieldParameters).ToString();
         }
 
         // Styles
-        class Styles {
+        class Styles
+        {
             public GUIStyle header = "AC BoldHeader";
             public GUIStyle componentButton = "AC ComponentButton";
             public GUIStyle groupButton = "AC GroupButton";
@@ -70,7 +76,10 @@ namespace NewGraph {
         // Member variables
         private ScriptableObject m_Owner;
 
-        private ISearchWindowProvider provider { get { return m_Owner as ISearchWindowProvider; } }
+        private ISearchWindowProvider provider
+        {
+            get { return m_Owner as ISearchWindowProvider; }
+        }
 
         private SearchTreeEntry[] m_Tree;
         private SearchTreeEntry[] m_SearchResultTree;
@@ -84,20 +93,30 @@ namespace NewGraph {
         private string m_Search = "";
 
         // Properties
-        private static Texture2D IndentationIcon {
-            get {
-                if (indentationIcon == null) {
+        private static Texture2D IndentationIcon
+        {
+            get
+            {
+                if (indentationIcon == null)
+                {
                     indentationIcon = new Texture2D(1, 1);
                     indentationIcon.SetPixel(0, 0, Color.clear);
                     indentationIcon.Apply();
                 }
+
                 return indentationIcon;
             }
         }
 
-        private bool hasSearch { get { return !string.IsNullOrEmpty(m_Search); } }
-        private SearchTreeGroupEntry activeParent {
-            get {
+        private bool hasSearch
+        {
+            get { return !string.IsNullOrEmpty(m_Search); }
+        }
+
+        private SearchTreeGroupEntry activeParent
+        {
+            get
+            {
                 int index = m_SelectionStack.Count - 2 + m_AnimTarget;
 
                 if (index < 0 || index >= m_SelectionStack.Count)
@@ -107,34 +126,50 @@ namespace NewGraph {
             }
         }
 
-        private SearchTreeEntry[] activeTree { get { return hasSearch ? m_SearchResultTree : m_Tree; } }
-        private SearchTreeEntry activeSearchTreeEntry {
-            get {
+        private SearchTreeEntry[] activeTree
+        {
+            get { return hasSearch ? m_SearchResultTree : m_Tree; }
+        }
+
+        private SearchTreeEntry activeSearchTreeEntry
+        {
+            get
+            {
                 if (activeTree == null)
                     return null;
 
                 List<SearchTreeEntry> children = GetChildren(activeTree, activeParent);
-                if (activeParent == null || activeParent.selectedIndex < 0 || activeParent.selectedIndex >= children.Count)
+                if (activeParent == null || activeParent.selectedIndex < 0 ||
+                    activeParent.selectedIndex >= children.Count)
                     return null;
 
                 return children[activeParent.selectedIndex];
             }
         }
-        private bool isAnimating { get { return m_Anim != m_AnimTarget; } }
+
+        private bool isAnimating
+        {
+            get { return m_Anim != m_AnimTarget; }
+        }
 
         // Methods
-        static SearchWindow() {
-            if (SearchField == null) {
+        static SearchWindow()
+        {
+            if (SearchField == null)
+            {
                 SearchField = typeof(EditorGUI).GetMethod(nameof(SearchField), methodRetrievalFlags);
             }
+
             s_DirtyList = true;
         }
 
-        void OnEnable() {
+        void OnEnable()
+        {
             s_FilterWindow = this;
         }
 
-        void OnDisable() {
+        void OnDisable()
+        {
             s_LastClosedTime = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             s_FilterWindow = null;
         }
@@ -146,15 +181,21 @@ namespace NewGraph {
         /// <param name="context">Context like mouse position, window size etc.</param>
         /// <param name="provider">the actual data object/window data content</param>
         /// <returns>Returns if we were able to successfully open the window.</returns>
-        public static bool Open<T>(T provider, VisualElement visualElement) where T : ScriptableObject, ISearchWindowProvider {
+        public static bool Open<T>(T provider, VisualElement visualElement)
+            where T : ScriptableObject, ISearchWindowProvider
+        {
             // If the window is already open, close it instead.
             UnityEngine.Object[] wins = Resources.FindObjectsOfTypeAll(typeof(SearchWindow));
-            if (wins.Length > 0) {
-                try {
+            if (wins.Length > 0)
+            {
+                try
+                {
                     ((EditorWindow)wins[0]).Close();
                     s_FilterWindow = null;
                     return false;
-                } catch (Exception) {
+                }
+                catch (Exception)
+                {
                     s_FilterWindow = null;
                 }
             }
@@ -162,23 +203,28 @@ namespace NewGraph {
             // We could not use realtimeSinceStartUp since it is set to 0 when entering/exitting playmode, we assume an increasing time when comparing time.
             long nowMilliSeconds = DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
             bool justClosed = nowMilliSeconds < s_LastClosedTime + 50;
-            if (!justClosed) {
-                if (s_FilterWindow == null) {
+            if (!justClosed)
+            {
+                if (s_FilterWindow == null)
+                {
                     s_FilterWindow = CreateInstance<SearchWindow>();
                     s_FilterWindow.hideFlags = HideFlags.HideAndDontSave;
                 }
-                s_FilterWindow.Init(provider, visualElement); 
+
+                s_FilterWindow.Init(provider, visualElement);
                 return true;
             }
+
             return false;
         }
 
-        private Rect GetTargetRect(float width, float height=1) {
+        private Rect GetTargetRect(float width, float height = 1)
+        {
             return new Rect(targetPosition.x - width / 2, targetPosition.y - k_WindowYOffset, width, height);
         }
 
-        void Init(ScriptableObject provider, VisualElement visualElement) {
-
+        void Init(ScriptableObject provider, VisualElement visualElement)
+        {
             m_Owner = provider;
 
             float width = Math.Max(targetWidth, k_DefaultWidth);
@@ -189,22 +235,27 @@ namespace NewGraph {
 
             ShowAsDropDown(buttonRect, new Vector2(buttonRect.width, height));
             position = buttonRect;
-            
-            visualElement.schedule.Execute(() => {
+
+            visualElement.schedule.Execute(() =>
+            {
                 Rect rect = GetTargetRect(width, height);
                 position = rect;
             });
-            
+
             Focus();
 
             wantsMouseMove = true;
         }
 
-        private void CreateSearchTree() {
+        private void CreateSearchTree()
+        {
             List<SearchTreeEntry> tree = provider.CreateSearchTree();
 
-            foreach (SearchTreeEntry treeEntry in tree) {
-                if (!(treeEntry is SearchTreeGroupEntry) && !(treeEntry is InlineHeaderEntry) && treeEntry.level >= 1 && treeEntry.content.image == null) {
+            foreach (SearchTreeEntry treeEntry in tree)
+            {
+                if (!(treeEntry is SearchTreeGroupEntry) && !(treeEntry is InlineHeaderEntry) && treeEntry.level >= 1 &&
+                    treeEntry.content.image == null)
+                {
                     treeEntry.content.image = IndentationIcon;
                 }
             }
@@ -217,11 +268,13 @@ namespace NewGraph {
             // Rebuild stack
             if (m_SelectionStack.Count == 0)
                 m_SelectionStack.Add(m_Tree[0] as SearchTreeGroupEntry);
-            else {
+            else
+            {
                 // The root is always the match for level 0
                 SearchTreeGroupEntry match = m_Tree[0] as SearchTreeGroupEntry;
                 int level = 0;
-                while (true) {
+                while (true)
+                {
                     // Assign the match for the current level
                     SearchTreeGroupEntry oldSearchTreeEntry = m_SelectionStack[level];
                     m_SelectionStack[level] = match;
@@ -236,9 +289,12 @@ namespace NewGraph {
                     // Try to find a child of the same name as we had before
                     List<SearchTreeEntry> children = GetChildren(activeTree, match);
                     SearchTreeEntry childMatch = children.FirstOrDefault(c => c.name == m_SelectionStack[level].name);
-                    if (childMatch != null && childMatch is SearchTreeGroupEntry) {
+                    if (childMatch != null && childMatch is SearchTreeGroupEntry)
+                    {
                         match = childMatch as SearchTreeGroupEntry;
-                    } else {
+                    }
+                    else
+                    {
                         // If we couldn't find the child, remove all further SearchTreeEntrys from the stack
                         m_SelectionStack.RemoveRange(level, m_SelectionStack.Count - level);
                     }
@@ -254,14 +310,15 @@ namespace NewGraph {
             rootVisualElement.Add(new Label() { text = "jjjj" });
         }
         */
-        
+
         //Vector2 scroll = Vector2.zero;
-        internal void OnGUI() {
+        internal void OnGUI()
+        {
             if (s_Styles == null)
                 s_Styles = new Styles();
 
             GUI.Label(new Rect(0, 0, position.width, position.height), GUIContent.none, s_Styles.background);
-            
+
             if (s_DirtyList)
                 CreateSearchTree();
 
@@ -283,15 +340,20 @@ namespace NewGraph {
 
             string newSearch = EditorGUISearchField(searchRect, m_DelayedSearch ?? m_Search);
 
-            if (EditorGUI.EndChangeCheck() && (newSearch != m_Search || m_DelayedSearch != null)) {
-                if (!isAnimating) {
+            if (EditorGUI.EndChangeCheck() && (newSearch != m_Search || m_DelayedSearch != null))
+            {
+                if (!isAnimating)
+                {
                     m_Search = m_DelayedSearch ?? newSearch;
                     RebuildSearch();
                     m_DelayedSearch = null;
-                } else {
+                }
+                else
+                {
                     m_DelayedSearch = newSearch;
                 }
             }
+
             //scroll = EditorGUILayout.BeginScrollView(scroll, false, true, GUILayout.ExpandHeight(true));
             // Show lists
             ListGUI(activeTree, m_Anim, GetSearchTreeEntryRelative(0), GetSearchTreeEntryRelative(-1));
@@ -299,57 +361,76 @@ namespace NewGraph {
                 ListGUI(activeTree, m_Anim + 1, GetSearchTreeEntryRelative(-1), GetSearchTreeEntryRelative(-2));
 
             // Animate
-            if (isAnimating && Event.current.type == EventType.Repaint) {
+            if (isAnimating && Event.current.type == EventType.Repaint)
+            {
                 long now = System.DateTime.Now.Ticks;
                 float deltaTime = (now - m_LastTime) / (float)System.TimeSpan.TicksPerSecond;
                 m_LastTime = now;
                 m_Anim = Mathf.MoveTowards(m_Anim, m_AnimTarget, deltaTime * 4);
-                if (m_AnimTarget == 0 && m_Anim == 0) {
+                if (m_AnimTarget == 0 && m_Anim == 0)
+                {
                     m_Anim = 1;
                     m_AnimTarget = 1;
                     m_SelectionStack.RemoveAt(m_SelectionStack.Count - 1);
                 }
+
                 Repaint();
             }
             //EditorGUILayout.EndScrollView();
         }
-        
-        private void HandleKeyboard() {
+
+        private void HandleKeyboard()
+        {
             Event evt = Event.current;
-            if (evt.type == EventType.KeyDown) {
+            if (evt.type == EventType.KeyDown)
+            {
                 // Always do these
-                if (evt.keyCode == KeyCode.DownArrow) {
+                if (evt.keyCode == KeyCode.DownArrow)
+                {
                     activeParent.selectedIndex++;
-                    activeParent.selectedIndex = Mathf.Min(activeParent.selectedIndex, GetChildren(activeTree, activeParent).Count - 1);
+                    activeParent.selectedIndex = Mathf.Min(activeParent.selectedIndex,
+                        GetChildren(activeTree, activeParent).Count - 1);
                     m_ScrollToSelected = true;
                     evt.Use();
                 }
-                if (evt.keyCode == KeyCode.UpArrow) {
+
+                if (evt.keyCode == KeyCode.UpArrow)
+                {
                     activeParent.selectedIndex--;
                     activeParent.selectedIndex = Mathf.Max(activeParent.selectedIndex, 0);
                     m_ScrollToSelected = true;
                     evt.Use();
                 }
-                if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter) {
-                    if (activeSearchTreeEntry != null) {
+
+                if (evt.keyCode == KeyCode.Return || evt.keyCode == KeyCode.KeypadEnter)
+                {
+                    if (activeSearchTreeEntry != null)
+                    {
                         SelectEntry(activeSearchTreeEntry, true);
                         evt.Use();
                     }
                 }
 
                 // Do these if we're not in search mode
-                if (!hasSearch) {
-                    if (evt.keyCode == KeyCode.LeftArrow || evt.keyCode == KeyCode.Backspace) {
+                if (!hasSearch)
+                {
+                    if (evt.keyCode == KeyCode.LeftArrow || evt.keyCode == KeyCode.Backspace)
+                    {
                         GoToParent();
                         evt.Use();
                     }
-                    if (evt.keyCode == KeyCode.RightArrow) {
-                        if (activeSearchTreeEntry != null) {
+
+                    if (evt.keyCode == KeyCode.RightArrow)
+                    {
+                        if (activeSearchTreeEntry != null)
+                        {
                             SelectEntry(activeSearchTreeEntry, false);
                             evt.Use();
                         }
                     }
-                    if (evt.keyCode == KeyCode.Escape) {
+
+                    if (evt.keyCode == KeyCode.Escape)
+                    {
                         Close();
                         evt.Use();
                     }
@@ -357,13 +438,17 @@ namespace NewGraph {
             }
         }
 
-        private void RebuildSearch() {
-            if (!hasSearch) {
+        private void RebuildSearch()
+        {
+            if (!hasSearch)
+            {
                 m_SearchResultTree = null;
-                if (m_SelectionStack[m_SelectionStack.Count - 1].name == kSearchHeader) {
+                if (m_SelectionStack[m_SelectionStack.Count - 1].name == kSearchHeader)
+                {
                     m_SelectionStack.Clear();
                     m_SelectionStack.Add(m_Tree[0] as SearchTreeGroupEntry);
                 }
+
                 m_AnimTarget = 1;
                 m_LastTime = System.DateTime.Now.Ticks;
                 return;
@@ -376,7 +461,8 @@ namespace NewGraph {
             List<SearchTreeEntry> matchesStart = new List<SearchTreeEntry>();
             List<SearchTreeEntry> matchesWithin = new List<SearchTreeEntry>();
 
-            foreach (SearchTreeEntry e in m_Tree) {
+            foreach (SearchTreeEntry e in m_Tree)
+            {
                 if ((e is SearchTreeGroupEntry) || (e is InlineHeaderEntry))
                     continue;
 
@@ -385,21 +471,27 @@ namespace NewGraph {
                 bool didMatchStart = false;
 
                 // See if we match ALL the search words.
-                for (int w = 0; w < searchWords.Length; w++) {
+                for (int w = 0; w < searchWords.Length; w++)
+                {
                     string search = searchWords[w];
-                    if (name.Contains(search)) {
+                    if (name.Contains(search))
+                    {
                         // If the start of the item matches the first search word, make a note of that.
                         if (w == 0 && name.StartsWith(search))
                             didMatchStart = true;
-                    } else {
+                    }
+                    else
+                    {
                         // As soon as any word is not matched, we disregard this item.
                         didMatchAll = false;
                         break;
                     }
                 }
+
                 // We always need to match all search words.
                 // If we ALSO matched the start, this item gets priority.
-                if (didMatchAll) {
+                if (didMatchAll)
+                {
                     if (didMatchStart)
                         matchesStart.Add(e);
                     else
@@ -425,35 +517,45 @@ namespace NewGraph {
 
             // Always select the first search result when search is changed (e.g. a character was typed in or deleted),
             // because it's usually the best match.
-            if (GetChildren(activeTree, activeParent).Count >= 1) {
+            if (GetChildren(activeTree, activeParent).Count >= 1)
+            {
                 activeParent.selectedIndex = -1;
                 List<SearchTreeEntry> entries = GetChildren(activeTree, activeParent);
-                for (int i = 0; i < entries.Count; i++) {
-                    if (entries[i].enabledCheck()) {
+                for (int i = 0; i < entries.Count; i++)
+                {
+                    if (entries[i].enabledCheck())
+                    {
                         activeParent.selectedIndex = i;
                         break;
                     }
                 }
-            } else {
+            }
+            else
+            {
                 activeParent.selectedIndex = -1;
             }
         }
 
-        private SearchTreeGroupEntry GetSearchTreeEntryRelative(int rel) {
+        private SearchTreeGroupEntry GetSearchTreeEntryRelative(int rel)
+        {
             int i = m_SelectionStack.Count + rel - 1;
             if (i < 0 || i >= m_SelectionStack.Count)
                 return null;
             return m_SelectionStack[i] as SearchTreeGroupEntry;
         }
 
-        private void GoToParent() {
-            if (m_SelectionStack.Count > 1) {
+        private void GoToParent()
+        {
+            if (m_SelectionStack.Count > 1)
+            {
                 m_AnimTarget = 0;
                 m_LastTime = System.DateTime.Now.Ticks;
             }
         }
 
-        private void ListGUI(SearchTreeEntry[] tree, float anim, SearchTreeGroupEntry parent, SearchTreeGroupEntry grandParent) {
+        private void ListGUI(SearchTreeEntry[] tree, float anim, SearchTreeGroupEntry parent,
+            SearchTreeGroupEntry grandParent)
+        {
             // Smooth the fractional part of the anim value
             anim = Mathf.Floor(anim) + Mathf.SmoothStep(0, 1, Mathf.Repeat(anim, 1));
 
@@ -473,7 +575,8 @@ namespace NewGraph {
             GUI.Label(headerRect, name, s_Styles.header);
 
             // Back button
-            if (grandParent != null) {
+            if (grandParent != null)
+            {
                 float yOffset = (headerRect.height - s_Styles.leftArrow.fixedHeight) / 2;
                 Rect arrowRect = new Rect(
                     headerRect.x + s_Styles.leftArrow.margin.left,
@@ -482,7 +585,8 @@ namespace NewGraph {
                     s_Styles.leftArrow.fixedHeight);
                 if (Event.current.type == EventType.Repaint)
                     s_Styles.leftArrow.Draw(arrowRect, false, false, false, false);
-                if (Event.current.type == EventType.MouseDown && headerRect.Contains(Event.current.mousePosition)) {
+                if (Event.current.type == EventType.MouseDown && headerRect.Contains(Event.current.mousePosition))
+                {
                     GoToParent();
                     Event.current.Use();
                 }
@@ -491,30 +595,36 @@ namespace NewGraph {
             ListGUI(tree, parent);
 
             GUILayout.EndArea();
-
         }
 
-        private void SelectEntry(SearchTreeEntry e, bool shouldInvokeCallback) {
-
-            if (e is SearchTreeGroupEntry) {
-                if (!hasSearch) {
+        private void SelectEntry(SearchTreeEntry e, bool shouldInvokeCallback)
+        {
+            if (e is SearchTreeGroupEntry)
+            {
+                if (!hasSearch)
+                {
                     m_LastTime = System.DateTime.Now.Ticks;
                     if (m_AnimTarget == 0)
                         m_AnimTarget = 1;
-                    else if (m_Anim == 1) {
+                    else if (m_Anim == 1)
+                    {
                         m_Anim = 0;
                         m_SelectionStack.Add(e as SearchTreeGroupEntry);
                     }
                 }
-            } else if (shouldInvokeCallback) {
+            }
+            else if (shouldInvokeCallback)
+            {
                 e.actionToExecute?.Invoke(null);
-                if (e.actionToExecute != null) {
+                if (e.actionToExecute != null)
+                {
                     Close();
                 }
             }
         }
 
-        private void ListGUI(SearchTreeEntry[] tree, SearchTreeGroupEntry parent) {
+        private void ListGUI(SearchTreeEntry[] tree, SearchTreeGroupEntry parent)
+        {
             // Start of scroll view list
             parent.scroll = GUILayout.BeginScrollView(parent.scroll);
 
@@ -525,7 +635,8 @@ namespace NewGraph {
             Rect selectedRect = new Rect();
 
             // Iterate through the children
-            for (int i = 0; i < children.Count; i++) {
+            for (int i = 0; i < children.Count; i++)
+            {
                 bool guiWasEnabled = GUI.enabled;
                 SearchTreeEntry e = children[i];
                 GUI.enabled = e.enabledCheck();
@@ -533,8 +644,10 @@ namespace NewGraph {
 
                 // Select the SearchTreeEntry the mouse cursor is over.
                 // Only do it on mouse move - keyboard controls are allowed to overwrite this until the next time the mouse moves.
-                if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDown) {
-                    if (parent.selectedIndex != i && r.Contains(Event.current.mousePosition)) {
+                if (Event.current.type == EventType.MouseMove || Event.current.type == EventType.MouseDown)
+                {
+                    if (parent.selectedIndex != i && r.Contains(Event.current.mousePosition))
+                    {
                         parent.selectedIndex = i;
                         Repaint();
                     }
@@ -542,21 +655,27 @@ namespace NewGraph {
 
                 bool selected = false;
                 // Handle selected item
-                if (i == parent.selectedIndex) {
+                if (i == parent.selectedIndex)
+                {
                     selected = true;
                     selectedRect = r;
                 }
 
                 // Draw SearchTreeEntry
-                if (Event.current.type == EventType.Repaint) {
+                if (Event.current.type == EventType.Repaint)
+                {
                     GUIStyle labelStyle = (e is SearchTreeGroupEntry) ? s_Styles.groupButton : s_Styles.componentButton;
                     //GUIContent newC = new GUIContent(e.content.text + "test") { image = e.content.image };
 
-                    if (e is InlineHeaderEntry) {
+                    if (e is InlineHeaderEntry)
+                    {
                         GUI.Label(r, e.content, s_Styles.header);
-                    } else {
+                    }
+                    else
+                    {
                         labelStyle.Draw(r, e.content, false, false, selected, selected);
-                        if (e is SearchTreeGroupEntry) {
+                        if (e is SearchTreeGroupEntry)
+                        {
                             float yOffset = (r.height - s_Styles.rightArrow.fixedHeight) / 2;
                             Rect arrowRect = new Rect(
                                 r.xMax - s_Styles.rightArrow.fixedWidth - s_Styles.rightArrow.margin.right,
@@ -567,11 +686,15 @@ namespace NewGraph {
                         }
                     }
                 }
-                if (!(e is InlineHeaderEntry) && Event.current.type == EventType.MouseDown && r.Contains(Event.current.mousePosition)) {
+
+                if (!(e is InlineHeaderEntry) && Event.current.type == EventType.MouseDown &&
+                    r.Contains(Event.current.mousePosition))
+                {
                     Event.current.Use();
                     parent.selectedIndex = i;
                     SelectEntry(e, true);
                 }
+
                 GUI.enabled = guiWasEnabled;
             }
 
@@ -580,35 +703,44 @@ namespace NewGraph {
             GUILayout.EndScrollView();
 
             // Scroll to show selected
-            if (m_ScrollToSelected && Event.current.type == EventType.Repaint) {
+            if (m_ScrollToSelected && Event.current.type == EventType.Repaint)
+            {
                 m_ScrollToSelected = false;
                 Rect scrollRect = GUILayoutUtility.GetLastRect();
-                if (selectedRect.yMax - scrollRect.height > parent.scroll.y) {
+                if (selectedRect.yMax - scrollRect.height > parent.scroll.y)
+                {
                     parent.scroll.y = selectedRect.yMax - scrollRect.height;
                     Repaint();
                 }
-                if (selectedRect.y < parent.scroll.y) {
+
+                if (selectedRect.y < parent.scroll.y)
+                {
                     parent.scroll.y = selectedRect.y;
                     Repaint();
                 }
             }
         }
 
-        private List<SearchTreeEntry> GetChildren(SearchTreeEntry[] tree, SearchTreeEntry parent) {
+        private List<SearchTreeEntry> GetChildren(SearchTreeEntry[] tree, SearchTreeEntry parent)
+        {
             List<SearchTreeEntry> children = new List<SearchTreeEntry>();
             int level = -1;
             int i = 0;
-            for (i = 0; i < tree.Length; i++) {
-                if (tree[i] == parent) {
+            for (i = 0; i < tree.Length; i++)
+            {
+                if (tree[i] == parent)
+                {
                     level = parent.level + 1;
                     i++;
                     break;
                 }
             }
+
             if (level == -1)
                 return children;
 
-            for (; i < tree.Length; i++) {
+            for (; i < tree.Length; i++)
+            {
                 SearchTreeEntry e = tree[i];
 
                 if (e.level < level)

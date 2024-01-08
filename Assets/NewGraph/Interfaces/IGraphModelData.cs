@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
-namespace NewGraph {
-    public interface IGraphModelData {
+namespace NewGraph
+{
+    public interface IGraphModelData
+    {
         public List<NodeModel> Nodes { get; }
 #if UNITY_EDITOR
         public string GUID { get; }
@@ -24,7 +26,6 @@ namespace NewGraph {
         public SerializedProperty GetTmpNameProperty();
         public SerializedProperty GetOriginalNameProperty();
         public SerializedProperty GetLastAddedNodeProperty(bool isUtilityNode);
-
 #endif
     }
 }

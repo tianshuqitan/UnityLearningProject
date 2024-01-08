@@ -9,12 +9,10 @@ using UnityEditor.Experimental.GraphView;
 
 namespace NewGraph
 {
-    using static GraphSettingsSingleton;
-
     public class NodeView : Node
     {
         public Action<NodeView> OnNodeViewSelected;
-        
+
         private VisualElement m_InspectorContent;
 
         public List<EditableLabelElement> editableLabels = new();
@@ -25,8 +23,10 @@ namespace NewGraph
         public List<PortView> OutputPorts => outputContainer.Query<PortView>().ToList();
         public PortView InputPort => inputContainer.Query<PortView>().ToList().First();
 
-        public List<Foldout> foldouts = new List<Foldout>();
+        public List<Foldout> foldouts = new();
         public NodeController controller { get; }
+
+        public VisualElement InspectorContent => m_InspectorContent;
 
         public NodeView(NodeController controller, Color nodeColor)
         {
@@ -43,7 +43,7 @@ namespace NewGraph
             }
             else
             {
-                style.backgroundColor = Settings.defaultNodeColor;
+                style.backgroundColor = new Color(0.27f, 0.27f, 0.27f, 1.0f);;
             }
         }
 
@@ -56,17 +56,18 @@ namespace NewGraph
             var position = controller.GetStartPosition();
             SetPosition(position);
 
-            if (!controller.nodeItem.isUtilityNode)
+            var nodeModel = controller.nodeItem;
+            if (!nodeModel.isUtilityNode)
             {
                 ColorizeBackground();
-                
+
                 m_InspectorContent = new VisualElement();
                 controller.DoForNameProperty(CreateLabelUI);
-                controller.DoForEachPortProperty(CreateOutputPort);
+                controller.DoForOutputPortProperty(CreateOutputPort);
                 controller.DoForInputPortProperty(CreateInputPort);
-                controller.DoForEachPropertyOrGroup(new[] { extensionContainer, m_InspectorContent }, CreateGroupUI,
+                controller.DoForEachPropertyOrGroup(new[] { this.extensionContainer, m_InspectorContent }, CreateGroupUI,
                     CreatePropertyUI);
-                
+
                 if (m_InspectorContent.childCount > 1 && !m_HasInspectorProperty)
                 {
                     m_InspectorContent[1].style.display = DisplayStyle.None;
@@ -74,7 +75,7 @@ namespace NewGraph
             }
             else
             {
-                var utilityNode = controller.nodeItem.nodeData as IUtilityNode;
+                var utilityNode = nodeModel.nodeData as IUtilityNode;
                 if (utilityNode.ShouldColorizeBackground())
                 {
                     ColorizeBackground();
@@ -93,27 +94,27 @@ namespace NewGraph
                         CreatePropertyUI);
                 }
 
-                (controller.nodeItem.nodeData as IUtilityNode).Initialize(controller);
+                (nodeModel.nodeData as IUtilityNode)?.Initialize(controller);
             }
             
-            controller.nodeItem.CleanupFoldoutStates();
+            RefreshExpandedState();
+            
+            nodeModel.CleanupFoldoutStates();
             BindUI(controller.GetSerializedObject());
         }
 
         private void CreateInputPort(PortInfo info, SerializedProperty property)
         {
-            Debug.LogFormat("{0} CreateInputPort", this.GetHashCode());
             var port = CreateNodePort(info, property);
             inputContainer.Add(port);
         }
 
         private void CreateOutputPort(PortInfo info, SerializedProperty property)
         {
-            Debug.LogFormat("{0} CreateOutputPort", this.GetHashCode());
             var outputPort = CreateNodePort(info, property);
             outputContainer.Add(outputPort);
         }
-        
+
         private static PortView CreateNodePort(PortInfo info, SerializedProperty property)
         {
             var port = PortView.Create<Edge>(info, property.Copy());
@@ -139,35 +140,34 @@ namespace NewGraph
         private void CreatePropertyUI(VisualElement[] groupParents, GraphPropertyInfo propertyInfo,
             SerializedProperty property)
         {
-            PropertyField Create(VisualElement groupParent, Editability edtability)
+            PropertyField Create(VisualElement elementParent, EditAbility editAbility)
             {
                 var propertyField = CreatePropertyField(property);
-                SetupPropertyField(propertyField, propertyInfo, edtability);
-
-                groupParent.Add(propertyField);
+                SetupPropertyField(propertyField, propertyInfo, editAbility);
+                elementParent.Add(propertyField);
                 return propertyField;
             }
 
             PropertyField nodeViewPropField = null;
             PropertyField inspectorPropField = null;
-
+            
+            var displayType = propertyInfo.graphDisplay.displayType;
             if (groupParents[0] != null && !controller.nodeItem.isUtilityNode &&
-                propertyInfo.graphDisplay.displayType.HasFlag(DisplayType.NodeView))
+                displayType.HasFlag(DisplayType.NodeView))
             {
-                nodeViewPropField = Create(groupParents[0], Editability.NodeView);
+                nodeViewPropField = Create(groupParents[0], EditAbility.NodeView);
             }
 
-            if (groupParents[1] != null && propertyInfo.graphDisplay.displayType.HasFlag(DisplayType.Inspector))
+            if (groupParents[1] != null && displayType.HasFlag(DisplayType.Inspector))
             {
                 m_HasInspectorProperty = true;
-                inspectorPropField = Create(groupParents[1], Editability.Inspector);
+                inspectorPropField = Create(groupParents[1], EditAbility.Inspector);
             }
 
-            // workaround for value change disconnection bug, this can only happen if we have an inspector & and a nodeview together
             if (inspectorPropField != null && nodeViewPropField != null)
             {
-                bool inspectorChanged = false;
-                bool nodeViewChanged = false;
+                var inspectorChanged = false;
+                var nodeViewChanged = false;
 
                 nodeViewPropField.RegisterValueChangeCallback((evt) =>
                 {
@@ -198,46 +198,43 @@ namespace NewGraph
 
         private VisualElement[] CreateGroupUI(GroupInfo groupInfo, VisualElement[] parents, SerializedProperty property)
         {
-            VisualElement[] newGroups = new VisualElement[parents.Length];
+            var newGroups = new VisualElement[parents.Length];
 
-            // handle special cases where we have an embedded managed reference that is within a group
-            // normally we would have double header labels, so to be able to hide them via styling we need to add some classes.
             void HandleEmbeddedReferenceCase(VisualElement foldoutContent)
             {
-                PropertyField propertyField = foldoutContent.Q<PropertyField>();
-                if (propertyField != null)
+                var propertyField = foldoutContent.Q<PropertyField>();
+                var foldout = propertyField?.Q<Foldout>();
+                if (foldout == null)
                 {
-                    // get the containing foldout
-                    Foldout foldout = propertyField.Q<Foldout>();
-                    if (foldout != null)
-                    {
-                        // make sure to force the foldoutvalue to stay open
-                        foldout.value = true;
-                        foldout.RegisterValueChangedCallback((evt) =>
-                        {
-                            if (evt.newValue != true)
-                            {
-                                foldout.value = true;
-                            }
-                        });
-                        // get the toggle
-                        Toggle toggle = foldout.Q<Toggle>();
-                        if (toggle != null)
-                        {
-                            // we found everything we need so tag classes
-                            foldout.AddToClassList("managedReference");
-                            toggle.AddToClassList(nameof(groupInfo.hasEmbeddedManagedReference));
-                        }
-                    }
+                    return;
                 }
+
+                foldout.value = true;
+                foldout.RegisterValueChangedCallback((evt) =>
+                {
+                    if (evt.newValue != true)
+                    {
+                        foldout.value = true;
+                    }
+                });
+
+                var toggle = foldout.Q<Toggle>();
+                if (toggle == null)
+                {
+                    return;
+                }
+
+                // foldout.AddToClassList("managedReference");
+                // toggle.AddToClassList(nameof(groupInfo.hasEmbeddedManagedReference));
             }
 
             // handle our custom foldout state for a group
             void HandleFoldoutState(Foldout newGroup, int index)
             {
-                int propertyPathHash = newGroup.name.GetHashCode();
-                NodeModel.FoldoutState foldOutState = controller.nodeItem.GetOrCreateFoldout(propertyPathHash);
+                var propertyPathHash = newGroup.name.GetHashCode();
+                var foldOutState = controller.nodeItem.GetOrCreateFoldout(propertyPathHash);
                 foldOutState.used = true;
+
                 newGroup.value = foldOutState.isExpanded;
                 newGroup.RegisterValueChangedCallback((evt) =>
                 {
@@ -250,33 +247,27 @@ namespace NewGraph
 
             void AddAtIndex(int index, bool empty, string prefix)
             {
-                // add label/ foldout etc.
                 if (!empty)
                 {
-                    Foldout newGroup = new Foldout();
-                    newGroup.pickingMode = PickingMode.Ignore;
-                    newGroup.AddToClassList(nameof(GroupInfo));
-                    newGroup.text = groupInfo.groupName;
-                    newGroup.name = prefix + groupInfo.relativePropertyPath;
+                    var newGroup = new Foldout
+                    {
+                        pickingMode = PickingMode.Ignore,
+                        text = groupInfo.groupName,
+                        name = prefix + groupInfo.relativePropertyPath
+                    };
 
-                    // handle our custom foldout state
+                    // newGroup.AddToClassList(nameof(GroupInfo));
                     HandleFoldoutState(newGroup, index);
 
-                    // wait until the visual tree was built
                     void GeomChanged(GeometryChangedEvent _)
                     {
-                        VisualElement unityContent = newGroup.Q<VisualElement>("unity-content");
-
-                        // check if we need to apply special behavior for managed references
+                        var unityContent = newGroup.Q<VisualElement>("unity-content");
                         if (groupInfo.hasEmbeddedManagedReference)
                         {
                             HandleEmbeddedReferenceCase(unityContent);
                         }
 
-                        // make sure to disable, that the ui captures input an prevents panning
                         unityContent.pickingMode = PickingMode.Ignore;
-
-                        // toss the callback away, since we are done
                         newGroup.UnregisterCallback<GeometryChangedEvent>(GeomChanged);
                     }
 
@@ -293,20 +284,10 @@ namespace NewGraph
                 }
             }
 
-            bool noNodeView = true;
-            if (groupInfo.graphDisplay.displayType.HasFlag(DisplayType.NodeView))
-            {
-                noNodeView = false;
-            }
-
+            var noNodeView = !groupInfo.graphDisplay.displayType.HasFlag(DisplayType.NodeView);
             AddAtIndex(0, noNodeView, nameof(DisplayType.NodeView));
 
-            bool noInspector = true;
-            if (groupInfo.graphDisplay.displayType.HasFlag(DisplayType.Inspector))
-            {
-                noInspector = false;
-            }
-
+            var noInspector = !groupInfo.graphDisplay.displayType.HasFlag(DisplayType.Inspector);
             AddAtIndex(1, noInspector, nameof(DisplayType.Inspector));
 
             return newGroups;
@@ -314,18 +295,18 @@ namespace NewGraph
 
         private void CreateLabelUI(SerializedProperty property)
         {
-            // Add label to title Container
-            PropertyField propertyField = CreatePropertyField(property);
+            var propertyField = CreatePropertyField(property);
             editableLabels.Add(new EditableLabelElement(propertyField));
             titleContainer.Add(propertyField);
 
-            // Add label to inspector
-            if (m_InspectorContent != null)
+            if (m_InspectorContent == null)
             {
-                PropertyField propertyFieldInspector = CreatePropertyField(property);
-                editableLabels.Add(new EditableLabelElement(propertyFieldInspector));
-                m_InspectorContent.Add(propertyFieldInspector);
+                return;
             }
+
+            var propertyFieldInspector = CreatePropertyField(property);
+            editableLabels.Add(new EditableLabelElement(propertyFieldInspector));
+            m_InspectorContent.Add(propertyFieldInspector);
         }
 
         private void BindUI(SerializedObject serializedObject)
@@ -333,31 +314,35 @@ namespace NewGraph
             this.Bind(serializedObject);
         }
 
-
-        private void SetupPropertyField(VisualElement propertyField, GraphPropertyInfo propertyInfo,
-            Editability editability)
+        private static void SetupPropertyField(VisualElement propertyField, GraphPropertyInfo propertyInfo,
+            EditAbility editAbility)
         {
-            if (!propertyInfo.graphDisplay.editability.HasFlag(editability))
+            if (!propertyInfo.graphDisplay.editAbility.HasFlag(editAbility))
             {
                 propertyField.SetEnabled(false);
             }
         }
 
-        private PropertyField CreatePropertyField(SerializedProperty property)
+        private static PropertyField CreatePropertyField(SerializedProperty property)
         {
-            PropertyField propertyField = new PropertyField(property.Copy())
+            var propertyField = new PropertyField(property.Copy())
             {
                 name = property.name,
                 bindingPath = property.propertyPath,
             };
-
             return propertyField;
         }
-
+        
         public void SetPosition(Vector2 newPosition)
         {
             base.SetPosition(new Rect(newPosition, Vector2.zero));
             controller.SetPosition(newPosition.x, newPosition.y);
+        }
+
+        public new Vector2 GetPosition()
+        {
+            var rect = base.GetPosition();
+            return new Vector2(rect.x, rect.y);
         }
 
         public void SetInspectorActive(bool active = true)
@@ -380,12 +365,11 @@ namespace NewGraph
 
         private void SettingsChanged()
         {
-            style.width = Settings.nodeWidth;
+            style.width = 300;
         }
-        
+
         public override void OnSelected()
         {
-            Debug.Log("NodeView.OnSelected");
             OnNodeViewSelected?.Invoke(this);
             base.OnSelected();
         }

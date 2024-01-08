@@ -1,12 +1,14 @@
 using System;
 
-namespace NewGraph {
+namespace NewGraph
+{
     [Flags]
-    public enum Editability { 
+    public enum EditAbility
+    {
         Unspecified = 0,
         None = 1,
-        Inspector = 2, 
-        NodeView = 4, 
+        Inspector = 2,
+        NodeView = 4,
         BothViews = Inspector | NodeView
     };
 }

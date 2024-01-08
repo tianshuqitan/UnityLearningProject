@@ -1,5 +1,6 @@
 using UnityEngine;
 using NewGraph;
+using UnityEditor.Experimental.GraphView;
 
 namespace Test
 {
@@ -27,6 +28,7 @@ namespace Test
         {
             base.AddNodeEntries();
             AddNodeEntry("Custom/Menu/Item", (obj) => { Debug.Log("custom menu item was clicked!"); });
+            AddNodeEntry("Custom/Group", (obj) => graphController.graphView.AddElement(new Group()));
         }
     }
 }

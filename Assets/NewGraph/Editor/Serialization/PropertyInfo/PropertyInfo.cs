@@ -1,10 +1,12 @@
-namespace NewGraph {
-    public class PropertyInfo {
+namespace NewGraph
+{
+    public class PropertyInfo
+    {
         public string relativePropertyPath = null;
 
-        public PropertyInfo(string relativePropertyPath) {
+        public PropertyInfo(string relativePropertyPath)
+        {
             this.relativePropertyPath = relativePropertyPath;
         }
     }
 }
-

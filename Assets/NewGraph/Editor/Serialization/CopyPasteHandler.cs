@@ -1,193 +1,168 @@
-
 using System.Collections.Generic;
 using Sirenix.Serialization;
 using UnityEditor;
-using UnityEngine;
 using SerializationUtility = Sirenix.Serialization.SerializationUtility;
 
-namespace NewGraph {
-    /// <summary>
-    /// This class handles the capturing & resolvement of graph content for Copy & Paste purposes.
-    /// </summary>
-    public class CopyPasteHandler {
-        private List<NodeModel> clones = new List<NodeModel>();
-        private List<NodeDataInfo> originals = new List<NodeDataInfo>();
-        private Dictionary<INode, INode> originalsToClones = new Dictionary<INode, INode>();
-        private IGraphModelData baseGraphData;
+namespace NewGraph
+{
+    public class CopyPasteHandler
+    {
+        private readonly Dictionary<INode, INode> m_OriginalsToClones = new();
+        private readonly List<NodeDataInfo> m_Originals = new();
+        private readonly List<NodeModel> m_Clones = new();
+        private IGraphModelData m_BaseGraphData;
 
-        /// <summary>
-        /// Do we have nodes for a copy/paste operation present?
-        /// </summary>
-        /// <returns>Returns true if we have nodes for a copy/paste operation present</returns>
-        public bool HasNodes() {
-            return originals.Count > 0;
+        public bool HasNodes()
+        {
+            return m_Originals.Count > 0;
         }
 
-        /// <summary>
-        /// Capture a list of nodes that should be copied
-        /// </summary>
-        /// <param name="nodes"></param>
-        /// <param name="rootData"></param>
-        public void CaptureSelection(List<NodeView> nodes, IGraphModelData rootData) {
-            // Adds a port to the given list of external references
-            void AddPortAsExternalReference(NodeDataInfo nodeResolveData, PortView port, NodeView node) {
-                string relativePath = port.m_BoundProperty.propertyPath.Replace(node.controller.nodeItem.GetSerializedProperty().propertyPath, "");
+        public void CaptureSelection(List<NodeView> nodes, IGraphModelData rootData)
+        {
+            void AddPortAsExternalReference(NodeDataInfo nodeResolveData, PortView port, NodeView node)
+            {
+                var relativePath = port.boundProperty.propertyPath.Replace(
+                    node.controller.nodeItem.GetSerializedProperty().propertyPath, "");
                 relativePath = relativePath.Substring(1, relativePath.Length - 1);
 
-                if (port.m_BoundProperty.managedReferenceValue != null) {
-                    nodeResolveData.externalReferences.Add(new NodeReference() {
-                        nodeData = port.m_BoundProperty.managedReferenceValue,
+                if (port.boundProperty.managedReferenceValue != null)
+                {
+                    nodeResolveData.externalReferences.Add(new NodeReference()
+                    {
+                        nodeData = port.boundProperty.managedReferenceValue,
                         relativePropertyPath = relativePath
                     });
                 }
             }
 
             Clear();
-            baseGraphData = rootData;
-            foreach (NodeView node in nodes) {
-                NodeDataInfo nodeResolveData = new NodeDataInfo();
 
-                // go over every output port and add it as an external reference
-                foreach (PortView outputPort in node.OutputPorts) {
+            m_BaseGraphData = rootData;
+            foreach (var node in nodes)
+            {
+                var nodeResolveData = new NodeDataInfo();
+                foreach (var outputPort in node.OutputPorts)
+                {
                     AddPortAsExternalReference(nodeResolveData, outputPort, node);
                 }
-                
-                nodeResolveData.baseNodeItem = node.controller.nodeItem;
-                originals.Add(nodeResolveData);
-            }
 
-            // go over all captured nodes and clean up the external references list
-            foreach (NodeDataInfo nodeData in originals) {
-                for(int i=nodeData.externalReferences.Count-1; i>=0; i--) {
-                    for (int j = originals.Count - 1; j >= 0; j--) {
-                        // if we find a referenced node in the list of captured nodes
-                        // it is not an external reference, therefore we can remove it from this list
-                        if (nodeData.externalReferences[i].nodeData == originals[j].baseNodeItem.nodeData) {
-                            nodeData.internalReferences.Add(nodeData.externalReferences[i]);
-                            nodeData.externalReferences.RemoveAt(i);
-                            break;
+                nodeResolveData.baseNodeItem = node.controller.nodeItem;
+                m_Originals.Add(nodeResolveData);
+            }
+            
+            foreach (var nodeData in m_Originals)
+            {
+                for (var i = nodeData.externalReferences.Count - 1; i >= 0; i--)
+                {
+                    for (var j = m_Originals.Count - 1; j >= 0; j--)
+                    {
+                        if (nodeData.externalReferences[i].nodeData != m_Originals[j].baseNodeItem.nodeData)
+                        {
+                            continue;
                         }
+
+                        nodeData.internalReferences.Add(nodeData.externalReferences[i]);
+                        nodeData.externalReferences.RemoveAt(i);
+                        break;
                     }
                 }
             }
         }
 
-        /// <summary>
-        /// Resolve the currently captured selection into clones and reconstruct all connections
-        /// </summary>
-        public void Resolve(IGraphModelData rootData, System.Action<List<NodeModel>> onBeforeAdding, System.Action onAfterAdding) {
-            List<NodeDataInfo> originalsCopy = new List<NodeDataInfo>(originals);
+        public void Resolve(IGraphModelData rootData, System.Action<List<NodeModel>> onBeforeAdding,
+            System.Action onAfterAdding)
+        {
+            var originalsCopy = new List<NodeDataInfo>(m_Originals);
+
             Clear();
 
-            bool isSameData = true;
-            if (baseGraphData != null && baseGraphData != rootData) {
-                isSameData = false;
-            }
-
-            foreach (NodeDataInfo original in originalsCopy) {
-                // re-check for null as something could have happened to the captured INode object
-                if (original != null && original.baseNodeItem != null) {
-                    originals.Add(original);
-                    NodeModel deepClone = DeepClone(original.baseNodeItem);
-                    clones.Add(deepClone);
-                    originalsToClones.Add(original.baseNodeItem.nodeData, deepClone.nodeData);
+            var isSameData = !(m_BaseGraphData != null && m_BaseGraphData != rootData);
+            foreach (var original in originalsCopy)
+            {
+                if (original?.baseNodeItem == null)
+                {
+                    continue;
                 }
+
+                m_Originals.Add(original);
+                var deepClone = DeepClone(original.baseNodeItem);
+                m_Clones.Add(deepClone);
+                m_OriginalsToClones.Add(original.baseNodeItem.nodeData, deepClone.nodeData);
             }
 
-            if (clones.Count > 0) {
-                NodeModel clone;
-                NodeDataInfo originalResolveData;
-
-                // execute callback with all nodes for pre-processing
-                onBeforeAdding(clones);
-
-                for (int i=0; i<clones.Count; i++) {
-                    // get the clone
-                    clone = clones[i];
-                    // get the original ands its external references
-                    originalResolveData = originals[i];
-
-                    // add node to list of nodes and update serialized object!
-                    rootData.AddNode(clone);
-                    rootData.SerializedGraphData.ApplyModifiedProperties();
-
-                    // resolve the list of external references of this node
-                    ResolveExternalReferences(ref originalResolveData.internalReferences, ref originalResolveData.externalReferences, ref isSameData, ref rootData);
-                }
-                onAfterAdding();
+            if (m_Clones.Count <= 0)
+            {
+                return;
             }
+
+            onBeforeAdding(m_Clones);
+
+            for (var i = 0; i < m_Clones.Count; i++)
+            {
+                var clone = m_Clones[i];
+                var originalResolveData = m_Originals[i];
+
+                rootData.AddNode(clone);
+                rootData.SerializedGraphData.ApplyModifiedProperties();
+
+                ResolveExternalReferences(ref originalResolveData.internalReferences,
+                    ref originalResolveData.externalReferences, ref isSameData, ref rootData);
+            }
+
+            onAfterAdding();
         }
 
-        /// <summary>
-        /// When copy & pasting it might happen that we have references to nodes that are not part of the selection.
-        /// This will happen quite frequently. Problem is, when deep copying, all of these references will become "new" nodes which is not what we want.
-        /// Instead we want to reference the original node. With this method we can resolve list of external references so they point to the original node in the graph.
-        /// A little bit more complexity is added if the paste command was executed while we
-        /// </summary>
-        /// <param name="externalReferences">The list of external references we want to resolve</param>
-        /// <param name="isSameData">Are we operating on the same graphData where our selection was captures? Or are we on a foreign graph?</param>
-        /// <param name="graphData">The actual graph data</param>
-        private void ResolveExternalReferences(ref List<NodeReference> internalReferences, ref List<NodeReference> externalReferences, ref bool isSameData, ref IGraphModelData graphData) {
+        private void ResolveExternalReferences(ref List<NodeReference> internalReferences,
+            ref List<NodeReference> externalReferences, ref bool isSameData, ref IGraphModelData graphData)
+        {
             SerializedProperty portReference;
-            SerializedProperty node;
 
-            // check if we have external references
-            // external references = references to nodes that are outside of this capture
-            if (externalReferences.Count > 0 || internalReferences.Count > 0) {
+            if (externalReferences.Count <= 0 && internalReferences.Count <= 0)
+            {
+                return;
+            }
 
-                // make sure we update the serialized object so we can get the serialized property of the lastly added node
-                graphData.SerializedGraphData.Update();
-                node = graphData.GetLastAddedNodeProperty(false);
+            graphData.SerializedGraphData.Update();
 
-                foreach (NodeReference internalReference in internalReferences) {
-                    // find the field (port) that has the external reference
-                    portReference = node.FindPropertyRelative(internalReference.relativePropertyPath);
-                    if (portReference != null) {
-                        // set the managedReferenceValue of the serialized property to the original value
-                        portReference.managedReferenceValue = originalsToClones[(INode)internalReference.nodeData];
-                        graphData.SerializedGraphData.ApplyModifiedProperties();
-                    }
+            var node = graphData.GetLastAddedNodeProperty(false);
+            foreach (var internalReference in internalReferences)
+            {
+                portReference = node.FindPropertyRelative(internalReference.relativePropertyPath);
+                if (portReference == null)
+                {
+                    continue;
                 }
 
-                // go over the list of external references
-                foreach (NodeReference externalReference in externalReferences) {
-                    // find the field (port) that has the external reference
-                    portReference = node.FindPropertyRelative(externalReference.relativePropertyPath);
+                portReference.managedReferenceValue = m_OriginalsToClones[(INode)internalReference.nodeData];
+                graphData.SerializedGraphData.ApplyModifiedProperties();
+            }
 
-                    if (portReference != null) {
-                        // check if changed serialization context (another graph was opened)
-                        if (isSameData) {
-                            // set the managedReferenceValue of the serialized property to the original value
-                            portReference.managedReferenceValue = externalReference.nodeData;
-                        } else {
-                            // if we are on another graph than the capture was made, we set the value to null as everything outside the capture should not exist here.
-                            portReference.managedReferenceValue = null;
-                        }
-                        graphData.SerializedGraphData.ApplyModifiedProperties();
-                    }
+            foreach (var externalReference in externalReferences)
+            {
+                portReference = node.FindPropertyRelative(externalReference.relativePropertyPath);
+                if (portReference == null)
+                {
+                    continue;
                 }
+
+                portReference.managedReferenceValue = isSameData ? externalReference.nodeData : null;
+                graphData.SerializedGraphData.ApplyModifiedProperties();
             }
         }
 
-        /// <summary>
-        /// Deeply clone a given object
-        /// </summary>
-        /// <param name="original">The original object</param>
-        /// <returns></returns>
-        private NodeModel DeepClone(NodeModel original) {
-            List<Object> unityObjects;
-            // this is the most brute force approach, but it has the benefit that we can really deepclone everything right out of the box.
-            byte[] serializedNode = SerializationUtility.SerializeValueWeak(original, DataFormat.Binary, out unityObjects);
-            return SerializationUtility.DeserializeValueWeak(serializedNode, DataFormat.Binary, unityObjects) as NodeModel;
+        private NodeModel DeepClone(NodeModel original)
+        {
+            var serializedNode =
+                SerializationUtility.SerializeValueWeak(original, DataFormat.Binary, out var unityObjects);
+            return SerializationUtility.DeserializeValueWeak(serializedNode, DataFormat.Binary, unityObjects) as
+                NodeModel;
         }
 
-        /// <summary>
-        /// Clear all captured data & clones.
-        /// </summary>
-        private void Clear() {
-            clones.Clear();
-            originals.Clear();
-            originalsToClones.Clear();
+        private void Clear()
+        {
+            m_Clones.Clear();
+            m_Originals.Clear();
+            m_OriginalsToClones.Clear();
         }
     }
 }

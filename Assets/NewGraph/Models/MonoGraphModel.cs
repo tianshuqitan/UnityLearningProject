@@ -1,20 +1,18 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 #if UNITY_EDITOR
 using UnityEditor;
 #endif
 using UnityEngine;
 
-namespace NewGraph {
-    /// <summary>
-    /// Our graph data model for MonoBehaviour based graphs
-    /// </summary>
-    public class MonoGraphModel : MonoBehaviour, IGraphModelData {
-        [SerializeField, HideInInspector]
-        private GraphModelBase baseModel;
+namespace NewGraph
+{
+    public class MonoGraphModel : MonoBehaviour, IGraphModelData
+    {
+        [SerializeField, HideInInspector] private GraphModelBase baseModel;
 
-        [SerializeField, HideInInspector]
-        private int id;
+        [SerializeField, HideInInspector] private int id;
 
         public List<NodeModel> Nodes => baseModel.nodes;
 
@@ -23,11 +21,15 @@ namespace NewGraph {
 
         public List<NodeModel> UtilityNodes => baseModel.utilityNodes;
 
-        public SerializedObject SerializedGraphData {
-            get {
-                if (baseModel.serializedGraphData == null) {
+        public SerializedObject SerializedGraphData
+        {
+            get
+            {
+                if (baseModel.serializedGraphData == null)
+                {
                     CreateSerializedObject();
                 }
+
                 return baseModel.serializedGraphData;
             }
         }
@@ -38,85 +40,105 @@ namespace NewGraph {
 
         public Vector3 ViewScale => baseModel.ViewScale;
 
-        public UnityEngine.Object BaseObject {
-            get {
-                if (baseModel.baseObject == null) {
+        public UnityEngine.Object BaseObject
+        {
+            get
+            {
+                if (baseModel.baseObject == null)
+                {
                     CreateSerializedObject();
                 }
+
                 return baseModel.baseObject;
             }
         }
 
         public string GUID => CreateID().ToString();
 
-        public NodeModel AddNode(INode node, bool isUtilityNode) {
+        public NodeModel AddNode(INode node, bool isUtilityNode)
+        {
             return baseModel.AddNode(node, isUtilityNode, this);
         }
 
-        public NodeModel AddNode(NodeModel nodeItem) {
+        public NodeModel AddNode(NodeModel nodeItem)
+        {
             return baseModel.AddNode(nodeItem);
         }
 
-        public void CreateSerializedObject() {
+        public void CreateSerializedObject()
+        {
             baseModel.CreateSerializedObject(this, nameof(baseModel));
         }
 
-        public void ForceSerializationUpdate() {
-            if (this != null) {
+        public void ForceSerializationUpdate()
+        {
+            if (this != null)
+            {
                 baseModel.ForceSerializationUpdate(this);
             }
         }
 
-        public SerializedProperty GetLastAddedNodeProperty(bool isUtilityNode) {
+        public SerializedProperty GetLastAddedNodeProperty(bool isUtilityNode)
+        {
             return baseModel.GetLastAddedNodeProperty(isUtilityNode);
         }
 
-        public SerializedProperty GetNodesProperty(bool isUtilityNode) {
+        public SerializedProperty GetNodesProperty(bool isUtilityNode)
+        {
             return baseModel.GetNodesProperty(isUtilityNode);
         }
 
-        public SerializedProperty GetTmpNameProperty() {
+        public SerializedProperty GetTmpNameProperty()
+        {
             return baseModel.GetTmpNameProperty();
         }
-        public SerializedProperty GetOriginalNameProperty() {
+
+        public SerializedProperty GetOriginalNameProperty()
+        {
             return baseModel.GetOriginalNameProperty();
         }
 
-        public void RemoveNode(NodeModel node) {
+        public void RemoveNode(NodeModel node)
+        {
             baseModel.RemoveNode(node);
         }
 
-        public void RemoveNodes(List<NodeModel> nodesToRemove) {
+        public void RemoveNodes(List<NodeModel> nodesToRemove)
+        {
             baseModel.RemoveNodes(nodesToRemove, this);
         }
 
-        public void SetViewport(Vector3 position, Vector3 scale) {
+        public void SetViewport(Vector3 position, Vector3 scale)
+        {
             baseModel.SetViewport(position, scale);
         }
 
-        private int CreateID() {
-            if (id == 0) {
+        private int CreateID()
+        {
+            if (id == 0)
+            {
                 id = Guid.NewGuid().ToString("D").GetHashCode();
             }
+
             return id;
         }
 
-        protected virtual void OnValidate() {
+        protected virtual void OnValidate()
+        {
             CreateID();
         }
 
-        public static IGraphModelData GetGraphData(string GUID) {
-            if (!string.IsNullOrEmpty(GUID)) {
-                MonoGraphModel[] graphModels = FindObjectsByType<MonoGraphModel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-                foreach (var gm in graphModels) {
-                    if (gm.GUID == GUID) {
-                        return gm;
-                    }
-                }
+        public static IGraphModelData GetGraphData(string guid)
+        {
+            if (string.IsNullOrEmpty(guid))
+            {
+                return null;
             }
-            return null;
-        }
 
+            var graphModels =
+                FindObjectsByType<MonoGraphModel>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            return graphModels.FirstOrDefault(gm => gm.GUID == guid);
+        }
 #endif
     }
 }

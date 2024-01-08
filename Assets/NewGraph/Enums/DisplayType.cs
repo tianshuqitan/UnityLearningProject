@@ -1,8 +1,10 @@
 using System;
 
-namespace NewGraph {
+namespace NewGraph
+{
     [Flags]
-    public enum DisplayType { 
+    public enum DisplayType
+    {
         Unspecified = 0,
         Hide = 1,
         Inspector = 2,

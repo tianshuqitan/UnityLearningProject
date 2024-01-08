@@ -2,6 +2,7 @@
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -9,17 +10,14 @@ namespace NewGraph
 {
     public class GraphView : UnityEditor.Experimental.GraphView.GraphView
     {
+        private GraphController m_Controller;
         private readonly Action<Actions, object> OnAction;
-        public VisualElement graphViewRoot;
         private readonly Dictionary<Actions, Action> internalActions = null;
         public ShortcutHandler shortcutHandler = null;
 
-        public delegate void MouseDown(MouseDownEvent evt);
-
-        public MouseDown OnMouseDown { get; set; }
-
-        public GraphView(VisualElement root, Action<Actions, object> OnAction)
+        public GraphView(GraphController controller, Action<Actions, object> OnAction)
         {
+            m_Controller = controller;
             style.flexGrow = 1;
             Insert(0, new GridBackground() { name = "grid_background" });
 
@@ -27,9 +25,14 @@ namespace NewGraph
             this.AddManipulator(new ContentDragger());
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
+            
+            nodeCreationRequest = OnNodeCreationRequest;
 
             GraphWindow.OnGlobalKeyDown -= OnKeyDown;
             GraphWindow.OnGlobalKeyDown += OnKeyDown;
+
+            UnregisterCallback<MouseDownEvent>(OnMouseDown);
+            RegisterCallback<MouseDownEvent>(OnMouseDown);
 
             this.OnAction = OnAction;
 
@@ -41,6 +44,21 @@ namespace NewGraph
 
             graphViewChanged -= OnGraphViewChanged;
             graphViewChanged += OnGraphViewChanged;
+        }
+
+        private void OnMouseDown(MouseDownEvent evt)
+        {
+            if (evt.button != 1)
+            {
+                return;
+            }
+
+            var isClickInElement = graphElements.ToList().Any(element =>
+                element.ContainsPoint(element.WorldToLocal(Event.current.mousePosition)));
+            if (isClickInElement == false)
+            {
+                m_Controller.OpenContextMenu();
+            }
         }
 
         private void OnKeyDown(Event evt)
@@ -111,9 +129,18 @@ namespace NewGraph
             }
         }
 
-        public Node GetFirstSelectedNode()
+        public NodeView GetFirstSelectedNode()
         {
-            return (Node)selection.ToList().First();
+            var selectionList = selection.ToList();
+            foreach (var element in selectionList)
+            {
+                if (element is NodeView node)
+                {
+                    return node;
+                }
+            }
+
+            return null;
         }
 
         public override void ClearSelection()
@@ -142,7 +169,7 @@ namespace NewGraph
 
         public int GetSelectedNodeCount()
         {
-            return GetSelectedCount<Node>();
+            return GetSelectedCount<NodeView>();
         }
 
         public int GetSelectedEdgesCount()
@@ -216,14 +243,12 @@ namespace NewGraph
         {
             if (graphViewChange.elementsToRemove != null)
             {
-                
             }
 
             if (graphViewChange.edgesToCreate != null)
             {
                 foreach (var edge in graphViewChange.edgesToCreate)
                 {
-                    
                 }
             }
 
@@ -256,6 +281,15 @@ namespace NewGraph
                 }
             }));
             return compatiblePorts;
+        }
+
+        public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
+        {
+        }
+        
+        private void OnNodeCreationRequest(NodeCreationContext c)
+        {
+            
         }
     }
 }

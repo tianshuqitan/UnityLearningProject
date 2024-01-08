@@ -1,11 +1,12 @@
 using System;
 
-namespace NewGraph {
-    /// <summary>
-    /// Attribute to flag an array or List field as an assignable port field in the graph
-    /// </summary>
+namespace NewGraph
+{
     [AttributeUsage(AttributeTargets.Field)]
-    public class PortListAttribute : PortAttribute {
-        public PortListAttribute() : base() { }
+    public class PortListAttribute : PortAttribute
+    {
+        public PortListAttribute() : base()
+        {
+        }
     }
 }
