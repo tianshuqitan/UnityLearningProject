@@ -214,9 +214,32 @@ namespace NewGraph
 
         private GraphViewChange OnGraphViewChanged(GraphViewChange graphViewChange)
         {
-            if (graphViewChange.edgesToCreate == null)
+            if (graphViewChange.elementsToRemove != null)
             {
-                return graphViewChange;
+                
+            }
+
+            if (graphViewChange.edgesToCreate != null)
+            {
+                foreach (var edge in graphViewChange.edgesToCreate)
+                {
+                    
+                }
+            }
+
+            if (graphViewChange.movedElements != null)
+            {
+                foreach (var element in graphViewChange.movedElements)
+                {
+                    switch (element)
+                    {
+                        case NodeView nodeView:
+                            nodeView.controller.SetPosition(nodeView.GetPosition().x, nodeView.GetPosition().y);
+                            break;
+                        case Edge edge:
+                            break;
+                    }
+                }
             }
 
             return graphViewChange;

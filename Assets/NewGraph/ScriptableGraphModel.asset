@@ -14,8 +14,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   baseModel:
     nodes:
-    - rid: 8033300334277820416
-    - rid: 8033300334277820418
+    - rid: 8033300416252084224
+    - rid: 8033300416252084226
+    - rid: 8033300416252084228
     utilityNodes: []
     tmpName: ScriptableGraphModel
     viewportInitiallySet: 1
@@ -24,30 +25,58 @@ MonoBehaviour:
   references:
     version: 2
     RefIds:
-    - rid: 8033300334277820416
+    - rid: 8033300416252084224
       type: {class: NodeModel, ns: NewGraph, asm: NewGraph}
       data:
         nodeData:
-          rid: 8033300334277820417
-        nodeX: 111
-        nodeY: 30
-        name: OutputNode
+          rid: 8033300416252084225
+        nodeX: 559
+        nodeY: 279
+        name: AnotherTestNode
         isUtilityNode: 0
-        foldouts: []
-    - rid: 8033300334277820417
-      type: {class: OutputNode, ns: NewGraph.Test.Editor, asm: NewAssembly}
+        foldouts:
+        - relativePropertyPathHash: 361884782
+          isExpanded: 0
+        - relativePropertyPathHash: -95179566
+          isExpanded: 1
+    - rid: 8033300416252084225
+      type: {class: AnotherTestNode, ns: NewGraph, asm: NewAssembly}
       data:
-        node:
-          rid: 8033300334277820419
-    - rid: 8033300334277820418
+        output:
+          rid: 8033300416252084227
+        dataList: []
+        specialData:
+          anotherOutput:
+            rid: 8033300416252084229
+          toggle: 1
+          test: 0
+    - rid: 8033300416252084226
       type: {class: NodeModel, ns: NewGraph, asm: NewGraph}
       data:
         nodeData:
-          rid: 8033300334277820419
-        nodeX: 137
-        nodeY: 10
-        name: InputNode
+          rid: 8033300416252084227
+        nodeX: 1001
+        nodeY: 202
+        name: TestNode
         isUtilityNode: 0
         foldouts: []
-    - rid: 8033300334277820419
-      type: {class: InputNode, ns: NewGraph, asm: NewAssembly}
+    - rid: 8033300416252084227
+      type: {class: TestNode, ns: NewGraph, asm: NewAssembly}
+      data:
+        number1: 0
+        number2: 0
+    - rid: 8033300416252084228
+      type: {class: NodeModel, ns: NewGraph, asm: NewGraph}
+      data:
+        nodeData:
+          rid: 8033300416252084229
+        nodeX: 1001
+        nodeY: 396
+        name: TestNode
+        isUtilityNode: 0
+        foldouts: []
+    - rid: 8033300416252084229
+      type: {class: TestNode, ns: NewGraph, asm: NewAssembly}
+      data:
+        number1: 0
+        number2: 0
