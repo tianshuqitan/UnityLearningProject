@@ -96,6 +96,7 @@ namespace EmmyLua
 			}
 			catch (Exception e)
 			{
+				Console.Write(e.Message);
 				TryLater();
 			}
 		}
@@ -110,6 +111,7 @@ namespace EmmyLua
 			}
 			catch (Exception e)
 			{
+				Console.Write(e.Message);
 				TryLater();
 			}
 		}
@@ -195,6 +197,7 @@ namespace EmmyLua
 				}
 				catch (Exception e)
 				{
+					Console.Write(e.Message);
 					TryLater();
 				}
 			}
