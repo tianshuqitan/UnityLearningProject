@@ -33,7 +33,7 @@ MonoBehaviour:
         nodeData:
           rid: 8033300416252084225
         nodeX: 600
-        nodeY: 277
+        nodeY: 257
         name: AnotherTestNode2
         isExpanded: 0
         foldouts:
@@ -59,7 +59,7 @@ MonoBehaviour:
         nodeData:
           rid: 8033300416252084227
         nodeX: 997
-        nodeY: 164
+        nodeY: 100
         name: TestNode2
         isExpanded: 0
         foldouts: []
@@ -78,7 +78,7 @@ MonoBehaviour:
         nodeData:
           rid: 8033300416252084229
         nodeX: 997
-        nodeY: 368
+        nodeY: 327
         name: TestNode3
         isExpanded: 0
         foldouts: []
@@ -97,14 +97,14 @@ MonoBehaviour:
         nodeData:
           rid: 8033300416252084231
         nodeX: 600
-        nodeY: 80
+        nodeY: -1
         name: AnotherTestNode1
         isExpanded: 0
         foldouts:
         - relativePropertyPathHash: 361884782
-          isExpanded: 0
+          isExpanded: 1
         - relativePropertyPathHash: -95179566
-          isExpanded: 0
+          isExpanded: 1
         isUtilityNode: 0
     - rid: 8033300416252084231
       type: {class: AnotherTestNode, ns: NewGraph, asm: NewAssembly}
@@ -115,7 +115,7 @@ MonoBehaviour:
         specialData:
           anotherOutput:
             rid: 8033300416252084227
-          toggle: 0
+          toggle: 1
           test: 0
     - rid: 8033300416252084232
       type: {class: NodeModel, ns: NewGraph, asm: NewGraph}
@@ -123,7 +123,7 @@ MonoBehaviour:
         nodeData:
           rid: 8033300416252084233
         nodeX: 997
-        nodeY: -58
+        nodeY: -139
         name: TestNode1
         isExpanded: 0
         foldouts: []

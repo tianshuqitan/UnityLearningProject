@@ -2,7 +2,6 @@
 using UnityEngine.UIElements;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
@@ -11,11 +10,11 @@ namespace NewGraph
     public class GraphView : UnityEditor.Experimental.GraphView.GraphView
     {
         private GraphController m_Controller;
-        private readonly Action<Actions, object> OnAction;
+        private readonly Action<Actions, object> m_Actions;
         private readonly Dictionary<Actions, Action> internalActions = null;
         public ShortcutHandler shortcutHandler = null;
-
-        public GraphView(GraphController controller, Action<Actions, object> OnAction)
+        
+        public GraphView(GraphController controller, Action<Actions, object> actions)
         {
             m_Controller = controller;
             style.flexGrow = 1;
@@ -25,7 +24,8 @@ namespace NewGraph
             this.AddManipulator(new ContentDragger());
             this.AddManipulator(new SelectionDragger());
             this.AddManipulator(new RectangleSelector());
-            
+            // this.AddManipulator(new FreehandSelector());
+
             nodeCreationRequest = OnNodeCreationRequest;
 
             GraphWindow.OnGlobalKeyDown -= OnKeyDown;
@@ -34,7 +34,7 @@ namespace NewGraph
             UnregisterCallback<MouseDownEvent>(OnMouseDown);
             RegisterCallback<MouseDownEvent>(OnMouseDown);
 
-            this.OnAction = OnAction;
+            m_Actions = actions;
 
             shortcutHandler = new ShortcutHandler();
             internalActions = new Dictionary<Actions, Action>()
@@ -85,14 +85,16 @@ namespace NewGraph
         private Vector2 LocalToViewTransformPosition(Vector2 localMousePosition)
         {
             return new Vector2(
-                (localMousePosition.x - contentContainer.transform.position.x) / contentContainer.transform.scale.x,
-                (localMousePosition.y - contentContainer.transform.position.y) / contentContainer.transform.scale.y);
+                (localMousePosition.x - viewTransform.position.x) / scale,
+                (localMousePosition.y - viewTransform.position.y) / scale);
         }
-
 
         public Vector2 GetMouseViewPosition()
         {
-            return LocalToViewTransformPosition(this.WorldToLocal(Event.current.mousePosition));
+            var screenPosition = GUIUtility.GUIToScreenPoint(Event.current.mousePosition);
+            var localPosition = this.WorldToLocal(screenPosition);
+            var finalPosition = LocalToViewTransformPosition(localPosition);
+            return finalPosition;
         }
 
         protected override void ExecuteDefaultAction(EventBase baseEvent)
@@ -226,7 +228,7 @@ namespace NewGraph
 
         private void OnActionExecuted(Actions actionType, object data = null)
         {
-            OnAction(actionType, data);
+            m_Actions(actionType, data);
         }
 
         public Edge CreateEdge()
@@ -286,10 +288,9 @@ namespace NewGraph
         public override void BuildContextualMenu(ContextualMenuPopulateEvent evt)
         {
         }
-        
+
         private void OnNodeCreationRequest(NodeCreationContext c)
         {
-            
         }
     }
 }

@@ -92,7 +92,7 @@ namespace NewGraph
             GlobalKeyEventHandler.OnKeyEvent -= HandleGlobalKeyPressEvents;
             GlobalKeyEventHandler.OnKeyEvent += HandleGlobalKeyPressEvents;
         }
-
+        
         private void HandleGlobalKeyPressEvents(Event evt)
         {
             if (!evt.isKey || mouseOverWindow != this || !hasFocus)

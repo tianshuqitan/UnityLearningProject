@@ -326,7 +326,7 @@ namespace NewGraph
         public NodeView CreateNewNode(Type nodeType, bool isUtilityNode = false)
         {
             var viewPosition = graphView.GetMouseViewPosition();
-
+            
             var node = Activator.CreateInstance(nodeType) as INode;
             var nodeItem = graphData.AddNode(node, isUtilityNode);
             nodeItem.SetData(graphData.GetLastAddedNodeProperty(isUtilityNode));
