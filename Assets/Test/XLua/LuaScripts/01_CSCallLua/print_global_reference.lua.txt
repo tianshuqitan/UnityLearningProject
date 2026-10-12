@@ -1,1 +1,0 @@
-print("global_reference = " .. tostring(global_reference))

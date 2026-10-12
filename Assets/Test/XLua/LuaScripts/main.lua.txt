@@ -1,1 +1,0 @@
-print("load main.lua")

@@ -1,2 +1,0 @@
-print("clear CSharpLuaTable")
-CSharpLuaTable = nil
